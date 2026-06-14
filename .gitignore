@@ -1,0 +1,31 @@
+# Dependencias
+node_modules/
+.pnp
+.venv/
+__pycache__/
+*.pyc
+
+# Entorno / secretos
+.env
+.env.local
+.env*.local
+*.key
+
+# Build
+.next/
+dist/
+build/
+out/
+
+# Datos / artefactos generados
+/data/raw/
+*.sqlite
+*.db
+/exports/
+*.pdf
+
+# Sistema / editor
+.DS_Store
+.idea/
+.vscode/
+*.log

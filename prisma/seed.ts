@@ -143,6 +143,61 @@ const MATH_G5 = [
   },
 ];
 
+// Unidades PILOTO de Matemáticas 5.º (scope & sequence original, por temas, alineado al DEPR).
+// Cada unidad mapea a expectativas sembradas arriba por su código.
+const MAT_G5_UNITS = [
+  {
+    code: "MAT-G05-U01",
+    title: "Numeración y valor posicional",
+    description:
+      "Lectura, escritura, comparación y orden de números naturales y decimales usando el valor posicional.",
+    timeframe: "2 semanas",
+    expectations: ["MA.N.5.1"],
+  },
+  {
+    code: "MAT-G05-U02",
+    title: "Multiplicación y división de números naturales",
+    description: "Algoritmos de multiplicación y división con fluidez, estimación y problemas verbales.",
+    timeframe: "3 semanas",
+    expectations: ["MA.N.5.3"],
+  },
+  {
+    code: "MAT-G05-U03",
+    title: "Fracciones y sus operaciones",
+    description: "Fracciones equivalentes; suma y resta de fracciones y números mixtos.",
+    timeframe: "3 semanas",
+    expectations: ["MA.N.5.2"],
+  },
+  {
+    code: "MAT-G05-U04",
+    title: "Expresiones y patrones algebraicos",
+    description: "Expresiones numéricas, orden de operaciones y análisis de patrones.",
+    timeframe: "2 semanas",
+    expectations: ["MA.A.5.1", "MA.A.5.2"],
+  },
+  {
+    code: "MAT-G05-U05",
+    title: "Geometría y el plano cartesiano",
+    description: "Clasificación de figuras bidimensionales y ubicación de puntos en el primer cuadrante.",
+    timeframe: "3 semanas",
+    expectations: ["MA.G.5.1", "MA.G.5.2"],
+  },
+  {
+    code: "MAT-G05-U06",
+    title: "Medición y volumen",
+    description: "Conversión de unidades y cálculo de volumen de prismas rectangulares.",
+    timeframe: "2 semanas",
+    expectations: ["MA.M.5.1", "MA.M.5.2"],
+  },
+  {
+    code: "MAT-G05-U07",
+    title: "Datos y probabilidad",
+    description: "Organización e interpretación de datos en gráficas y cálculo de la media.",
+    timeframe: "2 semanas",
+    expectations: ["MA.E.5.1", "MA.E.5.2"],
+  },
+];
+
 async function main() {
   // Grados
   for (let i = 0; i < GRADES.length; i++) {
@@ -193,11 +248,48 @@ async function main() {
     }
   }
 
+  // Unidades del piloto + mapeo a expectativas.
+  const expByCode = new Map(
+    (
+      await prisma.expectation.findMany({
+        where: { standard: { subjectId: mat.id, gradeId: g5.id } },
+        select: { id: true, code: true },
+      })
+    ).map((e) => [e.code, e.id]),
+  );
+
+  for (let i = 0; i < MAT_G5_UNITS.length; i++) {
+    const u = MAT_G5_UNITS[i];
+    const unit = await prisma.unit.upsert({
+      where: { code: u.code },
+      update: { title: u.title, description: u.description, timeframe: u.timeframe, order: i },
+      create: {
+        code: u.code,
+        subjectId: mat.id,
+        gradeId: g5.id,
+        title: u.title,
+        description: u.description,
+        timeframe: u.timeframe,
+        order: i,
+      },
+    });
+    for (const code of u.expectations) {
+      const expectationId = expByCode.get(code);
+      if (!expectationId) continue;
+      await prisma.unitExpectation.upsert({
+        where: { unitId_expectationId: { unitId: unit.id, expectationId } },
+        update: {},
+        create: { unitId: unit.id, expectationId },
+      });
+    }
+  }
+
   const counts = {
     grados: await prisma.grade.count(),
     materias: await prisma.subject.count(),
     estandares: await prisma.standard.count(),
     expectativas: await prisma.expectation.count(),
+    unidades: await prisma.unit.count(),
   };
   console.log("Seed completado:", counts);
 }

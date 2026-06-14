@@ -61,6 +61,7 @@ model Expectation {
 
 model Unit {
   id           String            @id @default(cuid())
+  code         String            @unique // auto-descriptivo, p.ej. "MAT-G05-U01"
   subject      Subject           @relation(fields: [subjectId], references: [id])
   subjectId    String
   grade        Grade             @relation(fields: [gradeId], references: [id])

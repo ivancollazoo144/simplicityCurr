@@ -24,7 +24,8 @@ npm run db:seed             # carga grados, materias y el piloto Mate 5.º
 npm run dev                 # http://localhost:3000
 ```
 
-Rutas: `/` (panel) y `/standards` (estándares por materia y grado).
+Rutas: `/` (panel), `/standards` (estándares por materia/grado), `/curriculum` (mapa curricular:
+crear unidades) y `/units/[id]` (mapear expectativas del DEPR a la unidad).
 `npm run db:studio` abre Prisma Studio para inspeccionar la base.
 
 ## Variables de entorno (`.env`)
@@ -50,7 +51,8 @@ Rutas: `/` (panel) y `/standards` (estándares por materia y grado).
 ## Estado
 
 - ✅ **Tanda 1 — Fundamentos:** scaffold, modelo de datos, seed del piloto, vista de estándares.
-- ⏳ Tanda 2 — Constructor curricular (unidades + mapeo de expectativas).
+- ✅ **Tanda 2 — Constructor curricular:** unidades con código auto-descriptivo, scope &
+  sequence de Mate 5.º, y mapeo de expectativas del DEPR (Server Actions).
 - ⏳ Tanda 3 — Generación de cuadernos con Claude.
 - ⏳ Tanda 4 — Export PDF.
 - ⏳ Tanda 5 — Escalar a todas las materias y grados.

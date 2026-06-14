@@ -53,10 +53,15 @@ export default async function Home() {
             Explora los estándares y expectativas del DEPR por materia y grado.
           </p>
         </Link>
-        <div className="rounded-lg border border-dashed border-zinc-200 p-5 opacity-60 dark:border-zinc-800">
-          <h2 className="font-medium text-zinc-900 dark:text-zinc-50">Currículo</h2>
-          <p className="mt-1 text-sm text-zinc-500">Mapa curricular y unidades. (Tanda 2)</p>
-        </div>
+        <Link
+          href="/curriculum"
+          className="rounded-lg border border-zinc-200 bg-white p-5 transition-colors hover:border-indigo-400 dark:border-zinc-800 dark:bg-zinc-900"
+        >
+          <h2 className="font-medium text-zinc-900 dark:text-zinc-50">Currículo →</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Mapa curricular: unidades por materia/grado y mapeo de expectativas.
+          </p>
+        </Link>
         <div className="rounded-lg border border-dashed border-zinc-200 p-5 opacity-60 dark:border-zinc-800">
           <h2 className="font-medium text-zinc-900 dark:text-zinc-50">Cuadernos</h2>
           <p className="mt-1 text-sm text-zinc-500">Generación con IA + PDF. (Tandas 3-4)</p>

@@ -1,0 +1,122 @@
+// Esquema de simplicityCurr — currículo K-12 alineado al DEPR.
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// --- Catálogo base ---
+
+model Subject {
+  id        String     @id @default(cuid())
+  code      String     @unique // p.ej. "MAT", "ESP", "CIE"
+  name      String
+  standards Standard[]
+  units     Unit[]
+}
+
+model Grade {
+  id        String     @id @default(cuid())
+  label     String     @unique // "K", "1" ... "12"
+  order     Int        @unique
+  standards Standard[]
+  units     Unit[]
+}
+
+// --- Estándares y expectativas del DEPR ---
+
+model Standard {
+  id           String        @id @default(cuid())
+  subject      Subject       @relation(fields: [subjectId], references: [id])
+  subjectId    String
+  grade        Grade         @relation(fields: [gradeId], references: [id])
+  gradeId      String
+  code         String // código oficial del estándar
+  description  String
+  expectations Expectation[]
+
+  @@unique([subjectId, gradeId, code])
+  @@index([subjectId, gradeId])
+}
+
+model Expectation {
+  id          String              @id @default(cuid())
+  standard    Standard            @relation(fields: [standardId], references: [id], onDelete: Cascade)
+  standardId  String
+  code        String // p.ej. "M.N5.1.1"
+  description String
+  indicators  Json? // lista de indicadores como JSON
+  units       UnitExpectation[]
+  lessons     LessonExpectation[]
+
+  @@unique([standardId, code])
+}
+
+// --- Mapa curricular (scope & sequence) ---
+
+model Unit {
+  id           String            @id @default(cuid())
+  subject      Subject           @relation(fields: [subjectId], references: [id])
+  subjectId    String
+  grade        Grade             @relation(fields: [gradeId], references: [id])
+  gradeId      String
+  title        String
+  description  String?
+  timeframe    String? // p.ej. "2 semanas"
+  order        Int               @default(0)
+  expectations UnitExpectation[]
+  lessons      Lesson[]
+  workbooks    Workbook[]
+
+  @@index([subjectId, gradeId])
+}
+
+model UnitExpectation {
+  unit          Unit        @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  unitId        String
+  expectation   Expectation @relation(fields: [expectationId], references: [id], onDelete: Cascade)
+  expectationId String
+
+  @@id([unitId, expectationId])
+}
+
+model Lesson {
+  id              String              @id @default(cuid())
+  unit            Unit                @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  unitId          String
+  title           String
+  objectives      String?
+  durationMinutes Int?
+  content         Json?
+  order           Int                 @default(0)
+  expectations    LessonExpectation[]
+  workbooks       Workbook[]
+}
+
+model LessonExpectation {
+  lesson        Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lessonId      String
+  expectation   Expectation @relation(fields: [expectationId], references: [id], onDelete: Cascade)
+  expectationId String
+
+  @@id([lessonId, expectationId])
+}
+
+// --- Cuadernos generados ---
+
+model Workbook {
+  id        String   @id @default(cuid())
+  title     String
+  status    String   @default("draft") // draft | final
+  pages     Json? // páginas del cuaderno (contenido + ejercicios)
+  unit      Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  unitId    String?
+  lesson    Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  lessonId  String?
+  createdAt DateTime @default(now())
+}

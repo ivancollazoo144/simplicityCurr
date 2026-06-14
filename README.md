@@ -7,14 +7,52 @@ Herramienta **para maestros**: almacena los estándares del DEPR de forma estruc
 construir el mapa curricular por materia/grado y genera **cuadernos** (workbooks imprimibles)
 con IA alineados a cada estándar.
 
+## Stack
+
+- **Next.js 16** (App Router) + TypeScript + Tailwind
+- **Prisma 7 + SQLite** (driver adapter `better-sqlite3`)
+- **Anthropic SDK** (`@anthropic-ai/sdk`) para generación de lecciones y cuadernos
+- Export PDF vía vista de impresión (próximas tandas)
+
+## Empezar
+
+```bash
+npm install
+cp .env.example .env        # y completa los valores (ver abajo)
+npm run db:migrate          # aplica las migraciones (crea dev.db)
+npm run db:seed             # carga grados, materias y el piloto Mate 5.º
+npm run dev                 # http://localhost:3000
+```
+
+Rutas: `/` (panel) y `/standards` (estándares por materia y grado).
+`npm run db:studio` abre Prisma Studio para inspeccionar la base.
+
+## Variables de entorno (`.env`)
+
+- `DATABASE_URL` — ruta de SQLite, p.ej. `file:./dev.db` (ya configurada por `prisma init`).
+- `ANTHROPIC_API_KEY` — necesaria para la **ingesta por IA** y la **generación de cuadernos**
+  (Tandas 3+). Sin ella, la app funciona con los datos del seed.
+
+> El `.env` está en `.gitignore`; nunca lo subas al repo.
+
+## Estándares del DEPR
+
+- El seed (`prisma/seed.ts`) carga un set **representativo** de Matemáticas 5.º para validar el
+  flujo. ⚠️ Los códigos y textos deben **verificarse/reemplazarse** contra el documento oficial.
+- Para ingerir un PDF oficial (cuando tengas `ANTHROPIC_API_KEY`):
+
+  ```bash
+  npm run ingest -- --subject MAT --grade 5 --pdf data/raw/matematicas.pdf
+  ```
+
+  El script extrae el texto del PDF y usa Claude para estructurarlo en estándares/expectativas.
+
 ## Estado
 
-🚧 Fase 0 — andamiaje inicial. Ver [`docs/PLAN.md`](docs/PLAN.md) para el plan completo y
-las decisiones abiertas (stack y materia+grado piloto).
+- ✅ **Tanda 1 — Fundamentos:** scaffold, modelo de datos, seed del piloto, vista de estándares.
+- ⏳ Tanda 2 — Constructor curricular (unidades + mapeo de expectativas).
+- ⏳ Tanda 3 — Generación de cuadernos con Claude.
+- ⏳ Tanda 4 — Export PDF.
+- ⏳ Tanda 5 — Escalar a todas las materias y grados.
 
-## Alcance del MVP
-
-- **Audiencia:** solo maestros.
-- **Piloto:** una materia + un grado (por definir) para validar el flujo completo
-  `estándar → currículo → cuaderno` antes de escalar a todo K–12.
-- **Fuente de estándares:** documentos oficiales del DEPR (de.pr.gov, dedigital.dde.pr).
+Plan completo en [`docs/PLAN.md`](docs/PLAN.md).

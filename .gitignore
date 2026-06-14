@@ -29,3 +29,5 @@ out/
 .idea/
 .vscode/
 *.log
+
+/app/generated/prisma

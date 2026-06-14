@@ -62,9 +62,11 @@ export default async function Home() {
             Mapa curricular: unidades por materia/grado y mapeo de expectativas.
           </p>
         </Link>
-        <div className="rounded-lg border border-dashed border-zinc-200 p-5 opacity-60 dark:border-zinc-800">
+        <div className="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
           <h2 className="font-medium text-zinc-900 dark:text-zinc-50">Cuadernos</h2>
-          <p className="mt-1 text-sm text-zinc-500">Generación con IA + PDF. (Tandas 3-4)</p>
+          <p className="mt-1 text-sm text-zinc-500">
+            Genéralos con IA desde una unidad (en su página). Export PDF: Tanda 4.
+          </p>
         </div>
       </nav>
     </main>

@@ -53,7 +53,9 @@ crear unidades) y `/units/[id]` (mapear expectativas del DEPR a la unidad).
 - ✅ **Tanda 1 — Fundamentos:** scaffold, modelo de datos, seed del piloto, vista de estándares.
 - ✅ **Tanda 2 — Constructor curricular:** unidades con código auto-descriptivo, scope &
   sequence de Mate 5.º, y mapeo de expectativas del DEPR (Server Actions).
-- ⏳ Tanda 3 — Generación de cuadernos con Claude.
+- ✅ **Tanda 3 — Generación de cuadernos:** motor con Claude (`lib/generate.ts`) que produce
+  cuadernos **originales** (contenido + ejercicios + clave) desde las expectativas; vista
+  `/workbooks/[id]`. Requiere `ANTHROPIC_API_KEY` para correr.
 - ⏳ Tanda 4 — Export PDF.
 - ⏳ Tanda 5 — Escalar a todas las materias y grados.
 

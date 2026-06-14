@@ -2,13 +2,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { toggleUnitExpectation } from "@/app/curriculum/actions";
+import { generateWorkbookForUnit, deleteWorkbook } from "@/app/workbooks/actions";
 
 export default async function UnitPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const hasApiKey = !!process.env.ANTHROPIC_API_KEY;
 
   const unit = await prisma.unit.findUnique({
     where: { id },
-    include: { subject: true, grade: true, expectations: true },
+    include: {
+      subject: true,
+      grade: true,
+      expectations: true,
+      workbooks: { orderBy: { createdAt: "desc" } },
+    },
   });
   if (!unit) notFound();
 
@@ -82,6 +89,56 @@ export default async function UnitPage({ params }: { params: Promise<{ id: strin
           );
         })}
       </ul>
+
+      {/* Cuadernos */}
+      <section className="mt-10">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-indigo-600">Cuadernos</h2>
+          {hasApiKey ? (
+            <form action={generateWorkbookForUnit}>
+              <input type="hidden" name="unitId" value={unit.id} />
+              <button
+                disabled={mapped.size === 0}
+                className="rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+                title={mapped.size === 0 ? "Asigna al menos una expectativa primero" : undefined}
+              >
+                Generar cuaderno con IA
+              </button>
+            </form>
+          ) : (
+            <span className="text-xs text-amber-600">
+              Configura <code>ANTHROPIC_API_KEY</code> en <code>.env</code> para generar.
+            </span>
+          )}
+        </div>
+
+        {unit.workbooks.length === 0 ? (
+          <p className="text-sm text-zinc-500">Aún no hay cuadernos para esta unidad.</p>
+        ) : (
+          <ul className="space-y-2">
+            {unit.workbooks.map((wb) => (
+              <li
+                key={wb.id}
+                className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
+              >
+                <Link href={`/workbooks/${wb.id}`} className="font-medium text-zinc-900 hover:text-indigo-600 dark:text-zinc-50">
+                  {wb.title}
+                </Link>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-zinc-400">{wb.createdAt.toLocaleDateString("es")}</span>
+                  <form action={deleteWorkbook}>
+                    <input type="hidden" name="id" value={wb.id} />
+                    <input type="hidden" name="unitId" value={unit.id} />
+                    <button className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950">
+                      Eliminar
+                    </button>
+                  </form>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </main>
   );
 }

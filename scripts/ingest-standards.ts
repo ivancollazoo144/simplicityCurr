@@ -71,10 +71,12 @@ async function main() {
     throw new Error("Falta ANTHROPIC_API_KEY en .env para estructurar el PDF con Claude.");
   }
 
-  // 1 + 2: leer y extraer texto del PDF
-  const pdfParse = (await import("pdf-parse")).default;
+  // 1 + 2: leer y extraer texto del PDF (pdf-parse v2: clase PDFParse)
+  const { PDFParse } = await import("pdf-parse");
   const buf = await fs.readFile(path.resolve(pdf));
-  const { text } = await pdfParse(buf);
+  const parser = new PDFParse({ data: new Uint8Array(buf) });
+  const { text } = await parser.getText();
+  await parser.destroy();
   console.log(`PDF leído: ${pdf} (${text.length} caracteres de texto).`);
 
   // 3: estructurar con Claude

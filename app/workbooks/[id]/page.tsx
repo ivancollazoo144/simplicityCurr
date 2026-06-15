@@ -21,9 +21,17 @@ export default async function WorkbookPage({ params }: { params: Promise<{ id: s
             ← {workbook.unit.title}
           </Link>
         )}
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          {workbook.title}
-        </h1>
+        <div className="mt-2 flex items-start justify-between gap-4">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {workbook.title}
+          </h1>
+          <Link
+            href={`/workbooks/${workbook.id}/print`}
+            className="mt-1 whitespace-nowrap rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500"
+          >
+            Imprimir / PDF
+          </Link>
+        </div>
         {workbook.unit && (
           <p className="mt-1 text-sm text-zinc-500">
             {workbook.unit.subject.name} · Grado {workbook.unit.grade.label}

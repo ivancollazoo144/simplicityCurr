@@ -24,3 +24,19 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Impresión / Guardar como PDF */
+@media print {
+  @page {
+    margin: 1.6cm;
+  }
+  /* Forzar colores claros al imprimir, aunque el sistema esté en modo oscuro */
+  :root {
+    --background: #ffffff;
+    --foreground: #000000;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+}

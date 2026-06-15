@@ -56,7 +56,9 @@ crear unidades) y `/units/[id]` (mapear expectativas del DEPR a la unidad).
 - ✅ **Tanda 3 — Generación de cuadernos:** motor con Claude (`lib/generate.ts`) que produce
   cuadernos **originales** (contenido + ejercicios + clave) desde las expectativas; vista
   `/workbooks/[id]`. Requiere `ANTHROPIC_API_KEY` para correr.
-- ⏳ Tanda 4 — Export PDF.
+- ✅ **Tanda 4 — Export PDF:** vista de impresión `/workbooks/[id]/print` (CSS `@media print`,
+  saltos de página por hoja, campos Nombre/Fecha y clave de respuestas); "Imprimir / Guardar PDF"
+  usa el diálogo del navegador.
 - ⏳ Tanda 5 — Escalar a todas las materias y grados.
 
 Plan completo en [`docs/PLAN.md`](docs/PLAN.md).

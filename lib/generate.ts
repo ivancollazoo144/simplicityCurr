@@ -56,10 +56,14 @@ Genera entre 3 y 6 páginas. Devuelve JSON con esta forma EXACTA:
 }
 
 function extractJson(text: string): string {
-  return text
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
+  // Si viene en un bloque ```json ... ```, toma el interior.
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  let s = fenced ? fenced[1] : text;
+  // Recorta cualquier preámbulo/epílogo: del primer { al último }.
+  const a = s.indexOf("{");
+  const b = s.lastIndexOf("}");
+  if (a >= 0 && b > a) s = s.slice(a, b + 1);
+  return s.trim();
 }
 
 /** Genera un cuaderno con Claude. Requiere ANTHROPIC_API_KEY en el entorno. */
@@ -71,7 +75,7 @@ export async function generateWorkbook(input: GenerateInput): Promise<WorkbookCo
   const client = new Anthropic();
   const msg = await client.messages.create({
     model: MODEL,
-    max_tokens: 12_000,
+    max_tokens: 16_000,
     system: SYSTEM,
     messages: [{ role: "user", content: buildPrompt(input) }],
   });
@@ -85,7 +89,12 @@ export async function generateWorkbook(input: GenerateInput): Promise<WorkbookCo
   try {
     parsed = JSON.parse(extractJson(text));
   } catch {
-    throw new Error("La respuesta de Claude no fue JSON válido. Reintenta.");
+    const truncated = msg.stop_reason === "max_tokens";
+    throw new Error(
+      truncated
+        ? "La respuesta de Claude se truncó (sube max_tokens)."
+        : "La respuesta de Claude no fue JSON válido. Reintenta.",
+    );
   }
 
   // Saneo mínimo.

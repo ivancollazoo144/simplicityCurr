@@ -37,7 +37,7 @@ function parseArgs(): Args {
   };
   const subject = get("--subject");
   const pdf = get("--pdf");
-  const chunkSize = Number(get("--chunk-size") ?? 100_000);
+  const chunkSize = Number(get("--chunk-size") ?? 60_000);
   const maxChunksRaw = get("--max-chunks");
   const startRaw = get("--start");
   const endRaw = get("--end");
@@ -210,12 +210,13 @@ async function main() {
 
     const prompt =
       mode === "courses" ? CoursePrompt(subj.name, courseMap!, chunk) : ChunkPrompt(subj.name, chunk);
-    const msg = await anthropic.messages.create({
+    const stream = anthropic.messages.stream({
       model: "claude-sonnet-4-6",
-      max_tokens: 16_000,
+      max_tokens: 64_000,
       temperature: 0,
       messages: [{ role: "user", content: prompt }],
     });
+    const msg = await stream.finalMessage();
     totalInputTokens += msg.usage?.input_tokens ?? 0;
     totalOutputTokens += msg.usage?.output_tokens ?? 0;
 

@@ -1,24 +1,45 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { SubjectGradeFilter } from "@/app/components/SubjectGradeFilter";
 import { createUnit, deleteUnit } from "./actions";
 
 export const metadata = { title: "Currículo · simplicityCurr" };
 
-export default async function CurriculumPage() {
-  const [units, subjects, grades] = await Promise.all([
-    prisma.unit.findMany({
-      orderBy: [{ subjectId: "asc" }, { gradeId: "asc" }, { order: "asc" }],
-      include: {
-        subject: true,
-        grade: true,
-        _count: { select: { expectations: true, lessons: true } },
-      },
-    }),
+export default async function CurriculumPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const sp = await searchParams;
+  const subjectCode = typeof sp.subject === "string" ? sp.subject : undefined;
+  const gradeLabel = typeof sp.grade === "string" ? sp.grade : undefined;
+
+  const [allSubjects, allGrades] = await Promise.all([
     prisma.subject.findMany({ orderBy: { name: "asc" } }),
     prisma.grade.findMany({ orderBy: { order: "asc" } }),
   ]);
 
-  // Agrupar por "materia · grado".
+  // Resolve IDs from filter codes for the units query and form pre-selection.
+  const filteredSubject = subjectCode
+    ? allSubjects.find((s) => s.code === subjectCode)
+    : undefined;
+  const filteredGrade = gradeLabel
+    ? allGrades.find((g) => g.label === gradeLabel)
+    : undefined;
+
+  const units = await prisma.unit.findMany({
+    where: {
+      ...(filteredSubject ? { subjectId: filteredSubject.id } : {}),
+      ...(filteredGrade ? { gradeId: filteredGrade.id } : {}),
+    },
+    orderBy: [{ subjectId: "asc" }, { gradeId: "asc" }, { order: "asc" }],
+    include: {
+      subject: true,
+      grade: true,
+      _count: { select: { expectations: true, lessons: true } },
+    },
+  });
+
   const groups = new Map<string, typeof units>();
   for (const u of units) {
     const key = `${u.subject.name} · Grado ${u.grade.label}`;
@@ -28,7 +49,7 @@ export default async function CurriculumPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12">
-      <div className="mb-8">
+      <div className="mb-6">
         <Link href="/" className="text-sm text-indigo-600 hover:underline">
           ← Inicio
         </Link>
@@ -41,21 +62,42 @@ export default async function CurriculumPage() {
         </p>
       </div>
 
+      <div className="mb-8">
+        <SubjectGradeFilter
+          subjects={allSubjects}
+          grades={allGrades}
+          current={{ subject: subjectCode, grade: gradeLabel }}
+          basePath="/curriculum"
+        />
+      </div>
+
       {/* Crear unidad */}
       <form
         action={createUnit}
         className="mb-10 grid gap-3 rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:grid-cols-2"
       >
         <h2 className="font-medium text-zinc-900 dark:text-zinc-50 sm:col-span-2">Nueva unidad</h2>
-        <select name="subjectId" required className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800">
-          {subjects.map((s) => (
+        <select
+          name="subjectId"
+          required
+          defaultValue={filteredSubject?.id ?? ""}
+          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800"
+        >
+          {!filteredSubject && <option value="">— Materia —</option>}
+          {allSubjects.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
             </option>
           ))}
         </select>
-        <select name="gradeId" required className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800">
-          {grades.map((g) => (
+        <select
+          name="gradeId"
+          required
+          defaultValue={filteredGrade?.id ?? ""}
+          className="rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800"
+        >
+          {!filteredGrade && <option value="">— Grado —</option>}
+          {allGrades.map((g) => (
             <option key={g.id} value={g.id}>
               Grado {g.label}
             </option>
@@ -79,7 +121,9 @@ export default async function CurriculumPage() {
 
       {[...groups.entries()].map(([title, us]) => (
         <section key={title} className="mb-8">
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-indigo-600">{title}</h2>
+          <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-indigo-600">
+            {title}
+          </h2>
           <ul className="space-y-2">
             {us.map((u) => (
               <li
@@ -87,7 +131,10 @@ export default async function CurriculumPage() {
                 className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
               >
                 <div>
-                  <Link href={`/units/${u.id}`} className="font-medium text-zinc-900 hover:text-indigo-600 dark:text-zinc-50">
+                  <Link
+                    href={`/units/${u.id}`}
+                    className="font-medium text-zinc-900 hover:text-indigo-600 dark:text-zinc-50"
+                  >
                     <span className="mr-2 font-mono text-xs text-zinc-400">{u.code}</span>
                     {u.title}
                   </Link>
@@ -109,7 +156,11 @@ export default async function CurriculumPage() {
       ))}
 
       {units.length === 0 && (
-        <p className="text-zinc-500">Aún no hay unidades. Crea la primera arriba.</p>
+        <p className="text-zinc-500">
+          {subjectCode || gradeLabel
+            ? "No hay unidades para este filtro."
+            : "Aún no hay unidades. Crea la primera arriba."}
+        </p>
       )}
     </main>
   );

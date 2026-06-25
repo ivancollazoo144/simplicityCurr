@@ -204,19 +204,38 @@ async function main() {
   let totalInputTokens = 0;
   let totalOutputTokens = 0;
 
+  const callWithRetry = async (prompt: string, maxRetries = 3) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const stream = anthropic.messages.stream({
+          model: "claude-sonnet-4-6",
+          max_tokens: 64_000,
+          temperature: 0,
+          messages: [{ role: "user", content: prompt }],
+        });
+        return await stream.finalMessage();
+      } catch (err) {
+        const msg = String(err);
+        const retryable = msg.includes("ECONNRESET") || msg.includes("terminated") || msg.includes("ETIMEDOUT");
+        if (attempt < maxRetries && retryable) {
+          const delay = 3_000 * attempt;
+          console.warn(`  ↻ Error de red (intento ${attempt}/${maxRetries}), reintentando en ${delay / 1000}s…`);
+          await new Promise((r) => setTimeout(r, delay));
+        } else {
+          throw err;
+        }
+      }
+    }
+    throw new Error("unreachable");
+  };
+
   for (let i = 0; i < limited.length; i++) {
     const chunk = limited[i];
     console.log(`\nFragmento ${i + 1}/${limited.length} (${chunk.length} chars)...`);
 
     const prompt =
       mode === "courses" ? CoursePrompt(subj.name, courseMap!, chunk) : ChunkPrompt(subj.name, chunk);
-    const stream = anthropic.messages.stream({
-      model: "claude-sonnet-4-6",
-      max_tokens: 64_000,
-      temperature: 0,
-      messages: [{ role: "user", content: prompt }],
-    });
-    const msg = await stream.finalMessage();
+    const msg = await callWithRetry(prompt);
     totalInputTokens += msg.usage?.input_tokens ?? 0;
     totalOutputTokens += msg.usage?.output_tokens ?? 0;
 

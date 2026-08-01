@@ -267,7 +267,7 @@ async function main() {
   for (let i = 0; i < MAT_G5_UNITS.length; i++) {
     const u = MAT_G5_UNITS[i];
     const unit = await prisma.unit.upsert({
-      where: { code: u.code },
+      where: { teacherId_code: { teacherId: adminTeacher.id, code: u.code } },
       update: { title: u.title, description: u.description, timeframe: u.timeframe, order: i },
       create: {
         code: u.code,

@@ -18,6 +18,7 @@ build/
 out/
 
 # Datos / artefactos generados
+/logs/
 /data/raw/
 *.sqlite
 *.db

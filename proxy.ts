@@ -3,7 +3,7 @@ import { getIronSession } from "iron-session";
 import type { SessionData } from "./lib/session";
 import { SESSION_OPTIONS } from "./lib/session-config";
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (pathname === "/login" || pathname.startsWith("/login/") || pathname === "/api/health") {

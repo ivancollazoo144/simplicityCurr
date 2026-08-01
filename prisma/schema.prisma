@@ -1,23 +1,51 @@
 // Esquema de simplicityCurr — currículo K-12 alineado al DEPR.
-// Docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../app/generated/prisma"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
+}
+
+// --- Autenticación ---
+
+model Teacher {
+  id          String       @id @default(cuid())
+  name        String
+  email       String       @unique
+  password    String
+  role        String       @default("teacher") // "teacher" | "admin"
+  createdAt   DateTime     @default(now())
+  classes     Class[]
+  units       Unit[]
+  toolOutputs ToolOutput[]
+}
+
+model Class {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  teacher     Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  subjectId   String
+  grade       Grade    @relation(fields: [gradeId], references: [id])
+  gradeId     String
+  createdAt   DateTime @default(now())
+  units       Unit[]
 }
 
 // --- Catálogo base ---
 
 model Subject {
   id        String     @id @default(cuid())
-  code      String     @unique // p.ej. "MAT", "ESP", "CIE"
+  code      String     @unique
   name      String
   standards Standard[]
   units     Unit[]
+  classes   Class[]
 }
 
 model Grade {
@@ -26,6 +54,7 @@ model Grade {
   order     Int        @unique
   standards Standard[]
   units     Unit[]
+  classes   Class[]
 }
 
 // --- Estándares y expectativas del DEPR ---
@@ -36,7 +65,7 @@ model Standard {
   subjectId    String
   grade        Grade         @relation(fields: [gradeId], references: [id])
   gradeId      String
-  code         String // código oficial del estándar
+  code         String
   description  String
   expectations Expectation[]
 
@@ -48,33 +77,40 @@ model Expectation {
   id          String              @id @default(cuid())
   standard    Standard            @relation(fields: [standardId], references: [id], onDelete: Cascade)
   standardId  String
-  code        String // p.ej. "M.N5.1.1"
+  code        String
   description String
-  indicators  Json? // lista de indicadores como JSON
+  indicators  Json?
   units       UnitExpectation[]
   lessons     LessonExpectation[]
 
   @@unique([standardId, code])
 }
 
-// --- Mapa curricular (scope & sequence) ---
+// --- Mapa curricular ---
 
 model Unit {
   id           String            @id @default(cuid())
-  code         String            @unique // auto-descriptivo, p.ej. "MAT-G05-U01"
+  code         String
+  teacher      Teacher           @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId    String
+  class        Class?            @relation(fields: [classId], references: [id], onDelete: SetNull)
+  classId      String?
   subject      Subject           @relation(fields: [subjectId], references: [id])
   subjectId    String
   grade        Grade             @relation(fields: [gradeId], references: [id])
   gradeId      String
   title        String
   description  String?
-  timeframe    String? // p.ej. "2 semanas"
+  timeframe    String?
   order        Int               @default(0)
   expectations UnitExpectation[]
   lessons      Lesson[]
   workbooks    Workbook[]
+  toolOutputs  ToolOutput[]
 
+  @@unique([teacherId, code])
   @@index([subjectId, gradeId])
+  @@index([teacherId])
 }
 
 model UnitExpectation {
@@ -94,9 +130,12 @@ model Lesson {
   objectives      String?
   durationMinutes Int?
   content         Json?
+  format          String?
+  weekNumber      Int?
   order           Int                 @default(0)
   expectations    LessonExpectation[]
   workbooks       Workbook[]
+  toolOutputs     ToolOutput[]
 }
 
 model LessonExpectation {
@@ -108,13 +147,31 @@ model LessonExpectation {
   @@id([lessonId, expectationId])
 }
 
-// --- Cuadernos generados ---
+// --- Herramientas para maestros ---
+
+model ToolOutput {
+  id        String   @id @default(cuid())
+  type      String   // "rubrica" | "quiz" | "boletin" | "comunicacion" | "nivelador" | "preguntas"
+  title     String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String
+  lesson    Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  lessonId  String?
+  unit      Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  unitId    String?
+  content   Json
+  createdAt DateTime @default(now())
+
+  @@index([teacherId])
+}
+
+// --- Cuadernos ---
 
 model Workbook {
   id        String   @id @default(cuid())
   title     String
-  status    String   @default("draft") // draft | final
-  pages     Json? // páginas del cuaderno (contenido + ejercicios)
+  status    String   @default("draft")
+  pages     Json?
   unit      Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
   unitId    String?
   lesson    Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)

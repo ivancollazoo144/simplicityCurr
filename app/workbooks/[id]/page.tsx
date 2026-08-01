@@ -1,15 +1,21 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/session";
 import type { WorkbookContent } from "@/lib/generate";
 
 export default async function WorkbookPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const { teacherId } = await requireSession();
+
   const workbook = await prisma.workbook.findUnique({
     where: { id },
-    include: { unit: { include: { subject: true, grade: true } } },
+    include: { unit: { include: { subject: true, grade: true } }, lesson: { include: { unit: true } } },
   });
   if (!workbook) notFound();
+
+  const ownerTeacherId = workbook.unit?.teacherId ?? workbook.lesson?.unit?.teacherId;
+  if (ownerTeacherId !== teacherId) notFound();
 
   const content = workbook.pages as unknown as WorkbookContent | null;
 
@@ -17,17 +23,17 @@ export default async function WorkbookPage({ params }: { params: Promise<{ id: s
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
       <div className="mb-6">
         {workbook.unit && (
-          <Link href={`/units/${workbook.unit.id}`} className="text-sm text-indigo-600 hover:underline">
+          <Link href={`/units/${workbook.unit.id}`} className="text-sm text-brand-teal hover:underline">
             ← {workbook.unit.title}
           </Link>
         )}
         <div className="mt-2 flex items-start justify-between gap-4">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
             {workbook.title}
           </h1>
           <Link
             href={`/workbooks/${workbook.id}/print`}
-            className="mt-1 whitespace-nowrap rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500"
+            className="mt-1 whitespace-nowrap rounded bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand/90"
           >
             Imprimir / PDF
           </Link>
@@ -44,14 +50,14 @@ export default async function WorkbookPage({ params }: { params: Promise<{ id: s
       ) : (
         <>
           {content.overview && (
-            <p className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+            <p className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600">
               {content.overview}
             </p>
           )}
           {content.objectives?.length > 0 && (
             <div className="mb-6">
-              <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-indigo-600">Objetivos</h2>
-              <ul className="list-inside list-disc space-y-1 text-sm text-zinc-700 dark:text-zinc-300">
+              <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-brand-teal">Objetivos</h2>
+              <ul className="list-inside list-disc space-y-1 text-sm text-zinc-700">
                 {content.objectives.map((o, i) => (
                   <li key={i}>{o}</li>
                 ))}
@@ -62,15 +68,15 @@ export default async function WorkbookPage({ params }: { params: Promise<{ id: s
           {content.pages.map((page, pi) => (
             <section
               key={pi}
-              className="mb-6 rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900"
+              className="mb-6 rounded-lg border border-zinc-200 bg-white p-5"
             >
-              <h3 className="mb-2 font-semibold text-zinc-900 dark:text-zinc-50">
+              <h3 className="mb-2 font-semibold text-zinc-900">
                 {pi + 1}. {page.title}
               </h3>
-              <p className="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">{page.content}</p>
+              <p className="whitespace-pre-wrap text-sm text-zinc-700">{page.content}</p>
 
               {page.exercises?.length > 0 && (
-                <ol className="mt-4 list-inside list-decimal space-y-2 text-sm text-zinc-800 dark:text-zinc-200">
+                <ol className="mt-4 list-inside list-decimal space-y-2 text-sm text-zinc-800">
                   {page.exercises.map((ex, ei) => (
                     <li key={ei}>{ex.prompt}</li>
                   ))}
@@ -79,7 +85,7 @@ export default async function WorkbookPage({ params }: { params: Promise<{ id: s
 
               {page.exercises?.some((e) => e.answer) && (
                 <details className="mt-3 text-sm">
-                  <summary className="cursor-pointer text-indigo-600">Clave de respuestas</summary>
+                  <summary className="cursor-pointer text-brand-teal">Clave de respuestas</summary>
                   <ol className="mt-2 list-inside list-decimal space-y-1 text-zinc-500">
                     {page.exercises.map((ex, ei) => (
                       <li key={ei}>{ex.answer}</li>

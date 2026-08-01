@@ -32,3 +32,4 @@ out/
 *.log
 
 /app/generated/prisma
+tsconfig.tsbuildinfo

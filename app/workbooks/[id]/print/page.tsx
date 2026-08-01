@@ -1,15 +1,21 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/session";
 import type { WorkbookContent } from "@/lib/generate";
 import { PrintButton } from "./PrintButton";
 
 export default async function WorkbookPrintPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const { teacherId } = await requireSession();
+
   const workbook = await prisma.workbook.findUnique({
     where: { id },
-    include: { unit: { include: { subject: true, grade: true } } },
+    include: { unit: { include: { subject: true, grade: true } }, lesson: { include: { unit: true } } },
   });
   if (!workbook) notFound();
+
+  const ownerTeacherId = workbook.unit?.teacherId ?? workbook.lesson?.unit?.teacherId;
+  if (ownerTeacherId !== teacherId) notFound();
 
   const content = workbook.pages as unknown as WorkbookContent | null;
 

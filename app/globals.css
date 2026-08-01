@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --brand: #E8521A;
+  --brand-teal: #1A7A6B;
 }
 
 @theme inline {
@@ -10,27 +12,35 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-brand: var(--brand);
+  --color-brand-teal: var(--brand-teal);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: #ffffff;
+  color: #171717;
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ── Loading overlay animations ─────────────────────────────────────────── */
+@keyframes breathe {
+  0%, 100% { transform: scale(1);    box-shadow: 0 4px 24px rgba(26,122,107,0.08); }
+  50%       { transform: scale(1.05); box-shadow: 0 8px 40px rgba(26,122,107,0.18); }
+}
+
+@keyframes fadeInMsg {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+.logo-breathe   { animation: breathe 2s ease-in-out infinite; }
+.fade-in-msg    { animation: fadeInMsg 0.4s ease-out both; }
 
 /* Impresión / Guardar como PDF */
 @media print {
   @page {
-    margin: 1.6cm;
+    margin: 1.2cm 1.5cm;
   }
-  /* Forzar colores claros al imprimir, aunque el sistema esté en modo oscuro */
   :root {
     --background: #ffffff;
     --foreground: #000000;

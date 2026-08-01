@@ -27,6 +27,7 @@ type Args = {
   end?: number;
   mode: "grade" | "courses";
   courseMap?: Record<string, string>;
+  clean: boolean;
 };
 
 function parseArgs(): Args {
@@ -60,6 +61,7 @@ function parseArgs(): Args {
     end: endRaw ? Number(endRaw) : undefined,
     mode,
     courseMap: courseMapRaw ? JSON.parse(courseMapRaw) : undefined,
+    clean: a.includes("--clean"),
   };
 }
 
@@ -168,18 +170,25 @@ ${chunk}
 """`;
 
 async function main() {
-  const { subject, pdf, chunkSize, maxChunks, start, end, mode, courseMap } = parseArgs();
+  const { subject, pdf, chunkSize, maxChunks, start, end, mode, courseMap, clean } = parseArgs();
 
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new Error("Falta ANTHROPIC_API_KEY en .env para estructurar el PDF con Claude.");
   }
 
-  const { PDFParse } = await import("pdf-parse");
-  const buf = await fs.readFile(path.resolve(pdf));
-  const parser = new PDFParse({ data: new Uint8Array(buf) });
-  const { text: fullText } = await parser.getText();
-  await parser.destroy();
-  console.log(`PDF leído: ${pdf} (${fullText.length} caracteres).`);
+  let fullText: string;
+  if (pdf.endsWith(".txt")) {
+    fullText = await fs.readFile(path.resolve(pdf), "utf8");
+    console.log(`TXT leído: ${pdf} (${fullText.length} caracteres).`);
+  } else {
+    const { PDFParse } = await import("pdf-parse");
+    const buf = await fs.readFile(path.resolve(pdf));
+    const parser = new PDFParse({ data: new Uint8Array(buf) });
+    const result = await parser.getText();
+    fullText = result.text;
+    await parser.destroy();
+    console.log(`PDF leído: ${pdf} (${fullText.length} caracteres).`);
+  }
 
   const text = start !== undefined || end !== undefined ? fullText.slice(start ?? 0, end ?? fullText.length) : fullText;
   if (start !== undefined || end !== undefined) {
@@ -197,6 +206,12 @@ async function main() {
     adapter: new PrismaBetterSqlite3({ url: process.env.DATABASE_URL ?? "file:./dev.db" }),
   });
   const subj = await prisma.subject.findUniqueOrThrow({ where: { code: subject } });
+
+  if (clean) {
+    const deleted = await prisma.standard.deleteMany({ where: { subjectId: subj.id } });
+    console.log(`--clean: ${deleted.count} estándares anteriores eliminados para ${subject}.`);
+  }
+
   const grades = await prisma.grade.findMany();
   const gradeByLabel = new Map(grades.map((g) => [g.label, g]));
 
@@ -216,11 +231,17 @@ async function main() {
         return await stream.finalMessage();
       } catch (err) {
         const msg = String(err);
-        const retryable = msg.includes("ECONNRESET") || msg.includes("terminated") || msg.includes("ETIMEDOUT");
+        const isBilling = msg.includes("credit balance") || msg.includes("invalid_request_error");
+        const retryable = !isBilling && (
+          msg.includes("ECONNRESET") || msg.includes("terminated") ||
+          msg.includes("ETIMEDOUT") || msg.includes("ENOTFOUND") ||
+          msg.includes("APIConnectionError") || msg.includes("Connection error")
+        );
+        const delay = msg.includes("ENOTFOUND") || msg.includes("Connection error") ? 10_000 * attempt : 3_000 * attempt;
         if (attempt < maxRetries && retryable) {
-          const delay = 3_000 * attempt;
           console.warn(`  ↻ Error de red (intento ${attempt}/${maxRetries}), reintentando en ${delay / 1000}s…`);
           await new Promise((r) => setTimeout(r, delay));
+
         } else {
           throw err;
         }

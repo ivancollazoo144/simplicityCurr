@@ -1,10 +1,15 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
 
 export const metadata = { title: "Cuadernos · simplicityCurr" };
 
 export default async function WorkbooksPage() {
+  const session = await getSession();
+  const teacherId = session.teacherId!;
+
   const workbooks = await prisma.workbook.findMany({
+    where: { unit: { teacherId } },
     orderBy: { createdAt: "desc" },
     include: {
       unit: { include: { subject: true, grade: true } },
@@ -23,16 +28,16 @@ export default async function WorkbooksPage() {
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12">
       <div className="mb-8">
-        <Link href="/" className="text-sm text-indigo-600 hover:underline">
+        <Link href="/" className="text-sm text-brand-teal hover:underline">
           ← Inicio
         </Link>
         <div className="mt-2 flex items-start justify-between gap-4">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
             Cuadernos generados
           </h1>
           <Link
             href="/curriculum"
-            className="mt-0.5 whitespace-nowrap rounded bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500"
+            className="mt-0.5 whitespace-nowrap rounded bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand/90"
           >
             Ir al currículo →
           </Link>
@@ -45,7 +50,7 @@ export default async function WorkbooksPage() {
       {workbooks.length === 0 ? (
         <p className="text-zinc-500">
           Aún no hay cuadernos. Genera uno desde una unidad en el{" "}
-          <Link href="/curriculum" className="text-indigo-600 hover:underline">
+          <Link href="/curriculum" className="text-brand-teal hover:underline">
             mapa curricular
           </Link>
           .
@@ -53,19 +58,19 @@ export default async function WorkbooksPage() {
       ) : (
         [...groups.entries()].map(([groupTitle, wbs]) => (
           <section key={groupTitle} className="mb-8">
-            <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-indigo-600">
+            <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-brand-teal">
               {groupTitle}
             </h2>
             <ul className="space-y-2">
               {wbs.map((wb) => (
                 <li
                   key={wb.id}
-                  className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
+                  className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4"
                 >
                   <div>
                     <Link
                       href={`/workbooks/${wb.id}`}
-                      className="font-medium text-zinc-900 hover:text-indigo-600 dark:text-zinc-50"
+                      className="font-medium text-zinc-900 hover:text-brand"
                     >
                       {wb.title}
                     </Link>
@@ -83,7 +88,7 @@ export default async function WorkbooksPage() {
                     </span>
                     <Link
                       href={`/workbooks/${wb.id}/print`}
-                      className="rounded border border-zinc-200 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                      className="rounded border border-zinc-200 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-50"
                     >
                       PDF
                     </Link>

@@ -3,14 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/session";
 import { generateWorkbook } from "@/lib/generate";
 
 export async function generateWorkbookForUnit(formData: FormData) {
+  const { teacherId } = await requireSession();
   const unitId = String(formData.get("unitId") ?? "");
   if (!unitId) return;
 
   const unit = await prisma.unit.findUniqueOrThrow({
-    where: { id: unitId },
+    where: { id: unitId, teacherId },
     include: {
       subject: true,
       grade: true,
@@ -44,9 +46,17 @@ export async function generateWorkbookForUnit(formData: FormData) {
 }
 
 export async function deleteWorkbook(formData: FormData) {
+  const { teacherId } = await requireSession();
   const id = String(formData.get("id") ?? "");
   const unitId = String(formData.get("unitId") ?? "");
   if (!id) return;
+  const workbook = await prisma.workbook.findUnique({
+    where: { id },
+    include: { unit: true, lesson: { include: { unit: true } } },
+  });
+  if (!workbook) throw new Error("No encontrado");
+  const ownerTeacherId = workbook.unit?.teacherId ?? workbook.lesson?.unit?.teacherId;
+  if (ownerTeacherId !== teacherId) throw new Error("No autorizado");
   await prisma.workbook.delete({ where: { id } });
   if (unitId) revalidatePath(`/units/${unitId}`);
 }

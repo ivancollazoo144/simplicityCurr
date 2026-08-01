@@ -28,7 +28,7 @@ export function SubjectGradeFilter({ subjects, grades, current, basePath }: Prop
       <select
         value={current.subject ?? ""}
         onChange={(e) => nav(e.target.value, current.grade ?? "")}
-        className="rounded border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+        className="rounded border border-zinc-300 px-3 py-2 text-sm"
       >
         <option value="">Todas las materias</option>
         {subjects.map((s) => (
@@ -40,7 +40,7 @@ export function SubjectGradeFilter({ subjects, grades, current, basePath }: Prop
       <select
         value={current.grade ?? ""}
         onChange={(e) => nav(current.subject ?? "", e.target.value)}
-        className="rounded border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+        className="rounded border border-zinc-300 px-3 py-2 text-sm"
       >
         <option value="">Todos los grados</option>
         {grades.map((g) => (
@@ -52,7 +52,7 @@ export function SubjectGradeFilter({ subjects, grades, current, basePath }: Prop
       {(current.subject || current.grade) && (
         <a
           href={basePath}
-          className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+          className="text-sm text-zinc-500 hover:text-zinc-900"
         >
           Limpiar ×
         </a>

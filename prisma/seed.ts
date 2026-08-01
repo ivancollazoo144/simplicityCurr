@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../app/generated/prisma/client";
 
 /**
@@ -18,7 +18,7 @@ import { PrismaClient } from "../app/generated/prisma/client";
  */
 
 const prisma = new PrismaClient({
-  adapter: new PrismaBetterSqlite3({ url: process.env.DATABASE_URL ?? "file:./dev.db" }),
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
 });
 
 const GRADES = ["K", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
@@ -249,6 +249,12 @@ async function main() {
   }
 
   // Unidades del piloto + mapeo a expectativas.
+  const adminTeacher = await prisma.teacher.findFirst({ where: { role: "admin" } });
+  if (!adminTeacher) {
+    console.log("Crea un teacher admin primero con scripts/seed-teacher.ts antes de correr el seed de unidades.");
+    return;
+  }
+
   const expByCode = new Map(
     (
       await prisma.expectation.findMany({
@@ -265,6 +271,7 @@ async function main() {
       update: { title: u.title, description: u.description, timeframe: u.timeframe, order: i },
       create: {
         code: u.code,
+        teacherId: adminTeacher.id,
         subjectId: mat.id,
         gradeId: g5.id,
         title: u.title,

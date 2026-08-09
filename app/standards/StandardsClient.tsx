@@ -5,6 +5,14 @@ import { CheckCircle, ClipboardList, X } from "lucide-react";
 import { SubjectGradeFilter } from "@/app/components/SubjectGradeFilter";
 import { createLessonFromExpectationsAction } from "./actions";
 
+const FORMAT_OPTIONS = [
+  { value: "ICAP", label: "ICAP" },
+  { value: "5E", label: "5 E's" },
+  { value: "UDL", label: "UDL" },
+  { value: "INQUIRY", label: "Indagación" },
+  { value: "WARMUP", label: "Warm Up" },
+] as const;
+
 type ExpData = {
   id: string;
   code: string;
@@ -288,6 +296,25 @@ export default function StandardsClient({
                     {units.map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.title} — {u.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Format selector */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-zinc-700">
+                    Formato de la lección
+                  </label>
+                  <select
+                    name="format"
+                    required
+                    defaultValue="ICAP"
+                    className="w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-sm outline-none focus:border-brand"
+                  >
+                    {FORMAT_OPTIONS.map((f) => (
+                      <option key={f.value} value={f.value}>
+                        {f.label}
                       </option>
                     ))}
                   </select>

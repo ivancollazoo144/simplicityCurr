@@ -133,6 +133,7 @@ model Lesson {
   format          String?
   weekNumber      Int?
   order           Int                 @default(0)
+  createdAt       DateTime            @default(now())
   expectations    LessonExpectation[]
   workbooks       Workbook[]
   toolOutputs     ToolOutput[]

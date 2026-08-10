@@ -8,13 +8,11 @@ import {
   BarChart3,
   AlertTriangle,
   CheckCircle,
-  Clock,
-  Lightbulb,
   TrendingUp,
   Activity,
   ChevronRight,
 } from "lucide-react";
-import DonutChart from "./DonutChart";
+import MonthlyChart from "./MonthlyChart";
 
 export const metadata = { title: "Reportes · simplicityCurr" };
 
@@ -82,7 +80,7 @@ export default async function ReportsPage() {
   const plansCount = allLessons.filter((l) => l.content !== null).length;
   const workbookCount = workbooks.length;
 
-  // DEPR coverage: unique expectations in teacher units vs total for subject/grade combos
+  // DEPR coverage: total expectations for teacher's subject/grade combos
   const teacherUnits = await prisma.unit.findMany({
     where: { teacherId },
     select: { subjectId: true, gradeId: true },
@@ -99,16 +97,50 @@ export default async function ReportsPage() {
     totalExpectations += cnt;
   }
 
+  // All-time covered (for card 4)
   const coveredIds = await prisma.unitExpectation.findMany({
     where: { unit: { teacherId } },
     select: { expectationId: true },
     distinct: ["expectationId"],
   });
   const coveredCount = coveredIds.length;
-  const inProgressCount = Math.round(coveredCount * 0.26);
-  const notStartedCount = Math.max(0, totalExpectations - coveredCount - inProgressCount);
   const coveragePercent =
     totalExpectations > 0 ? Math.round((coveredCount / totalExpectations) * 100) : 0;
+  const notStartedCount = Math.max(0, totalExpectations - coveredCount);
+
+  // Monthly DEPR coverage: lessons created this month → their expectations
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthName = now.toLocaleDateString("es-PR", { month: "long", year: "numeric" });
+
+  const monthLessons = await prisma.lesson.findMany({
+    where: { unit: { teacherId }, createdAt: { gte: monthStart } },
+    select: {
+      id: true,
+      createdAt: true,
+      expectations: { select: { expectationId: true } },
+    },
+  });
+
+  // Group distinct expectations by week-of-month (1–4)
+  const weekExpMap = new Map<number, Set<string>>();
+  for (const lesson of monthLessons) {
+    const week = Math.min(4, Math.ceil(lesson.createdAt.getDate() / 7));
+    if (!weekExpMap.has(week)) weekExpMap.set(week, new Set());
+    for (const le of lesson.expectations) {
+      weekExpMap.get(week)!.add(le.expectationId);
+    }
+  }
+
+  const weeklyData = [1, 2, 3, 4].map((w) => ({
+    week: `Sem. ${w}`,
+    count: weekExpMap.get(w)?.size ?? 0,
+  }));
+
+  const allMonthExpIds = new Set(
+    monthLessons.flatMap((l) => l.expectations.map((e) => e.expectationId)),
+  );
+  const monthCoveredCount = allMonthExpIds.size;
 
   // Per-class stats for the progress table
   type ClassRow = {
@@ -263,34 +295,25 @@ export default async function ReportsPage() {
 
       {/* ── Row 2: Donut + Activity ─────────────────────────────────────────── */}
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-5">
-        {/* Donut chart */}
+        {/* Monthly DEPR chart */}
         <div className="rounded-xl border border-zinc-200 bg-white p-6 lg:col-span-3">
           <div className="mb-5 flex items-center justify-between">
             <div>
-              <h2 className="font-semibold text-zinc-900">Cobertura de estándares DEPR</h2>
+              <h2 className="font-semibold text-zinc-900">Cobertura DEPR este mes</h2>
               <p className="mt-0.5 text-xs text-zinc-400">
-                Expectativas cubiertas en tus unidades curriculares
+                Expectativas trabajadas en lecciones creadas este mes
               </p>
             </div>
             <Link href="/standards" className="text-xs text-brand-teal hover:underline">
-              Ver detalle →
+              Ver estándares →
             </Link>
           </div>
-          {totalExpectations > 0 ? (
-            <DonutChart
-              covered={coveredCount}
-              inProgress={inProgressCount}
-              notStarted={notStartedCount}
-            />
-          ) : (
-            <div className="flex h-40 flex-col items-center justify-center gap-2 text-zinc-400">
-              <BarChart3 size={32} className="text-zinc-200" />
-              <p className="text-sm">Sin datos de expectativas aún</p>
-              <Link href="/curriculum" className="text-xs text-brand-teal hover:underline">
-                Crear unidades →
-              </Link>
-            </div>
-          )}
+          <MonthlyChart
+            weeklyData={weeklyData}
+            monthCoveredCount={monthCoveredCount}
+            totalExpectations={totalExpectations}
+            monthName={monthName}
+          />
         </div>
 
         {/* Activity feed */}

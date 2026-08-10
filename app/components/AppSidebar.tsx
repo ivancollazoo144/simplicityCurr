@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   GraduationCap,
+  HelpCircle,
 } from "lucide-react";
 import { logoutAction } from "@/app/login/actions";
 
@@ -32,6 +33,7 @@ const NAV = [
   { href: "/workbooks",  label: "Cuadernos",         icon: BookOpen },
   { href: "/standards",  label: "Estándares DEPR",   icon: BookMarked },
   { href: "/tools",      label: "Herramientas IA",   icon: Wrench },
+  { href: "/welcome",    label: "Guía de inicio",    icon: HelpCircle },
 ];
 
 function NavLink({

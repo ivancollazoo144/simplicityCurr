@@ -1,7 +1,6 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../app/generated/prisma/client";
-import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
@@ -24,7 +23,6 @@ const GRADE_MAP: Record<string, string> = {
   Duodecimo: "12",
 };
 
-// Grado en español → nombre para el título de la clase
 const GRADE_TITLE: Record<string, string> = {
   Kinder:    "Kinder",
   Primero:   "Primero",
@@ -72,102 +70,101 @@ const SUBJECTS = [
   { code: "VIRE", name: "Virtual 2-3 Inglés" },
 ];
 
-const TEACHERS = [
-  { name: "Brenda Gonzalez",          email: "brenda.gonzalez@simplicity.edu" },
-  { name: "Victor Ortiz",             email: "victor.ortiz@simplicity.edu" },
-  { name: "Yanuska M Diaz Medina",    email: "yanuska.diaz@simplicity.edu" },
-  { name: "Angelica M Lopez Franco",  email: "angelica.lopez@simplicity.edu" },
-  { name: "Walenda Nieves",           email: "walenda.nieves@simplicity.edu" },
-  { name: "Filiberto Marmolejos",     email: "filiberto.marmolejos@simplicity.edu" },
-  { name: "Vanessa C Nieves Landron", email: "vanessa.nieves@simplicity.edu" },
-  { name: "Emilienys Melendez Vega",  email: "emilienys.melendez@simplicity.edu" },
-  { name: "Michele Rodriguez",        email: "michele.rodriguez@simplicity.edu" },
-  { name: "Raul Perez",               email: "raul.perez@simplicity.edu" },
-  { name: "Lillibette Negron",        email: "lillibette.negron@simplicity.edu" },
-];
+// Clave corta por apellido → keyword para buscar en DB
+const TEACHER_KEY: Record<string, string> = {
+  brenda:     "Brenda",
+  victor:     "Victor",
+  yanuska:    "Yanuska",
+  angelica:   "Angelica",
+  walenda:    "Walenda",
+  filiberto:  "Filiberto",
+  vanessa:    "Vanessa",
+  emilienys:  "Emilienys",
+  michele:    "Michele",
+  raul:       "Raul",
+  lillibette: "Lillibette",
+};
 
-// [subjectCode, grade, teacherEmail, period]
+// [subjectCode, grade, teacherKey, period]
 const CLASSES: [string, string, string, string][] = [
-  ["ALG1", "Octavo",    "brenda.gonzalez@simplicity.edu",       "Cuarta Clase IS"],
-  ["ALG2", "Noveno",    "victor.ortiz@simplicity.edu",          "Quinta Clase IS"],
-  ["BIO",  "Decimo",    "victor.ortiz@simplicity.edu",          "Cuarta Clase IS"],
-  ["CIE",  "Cuarto",    "yanuska.diaz@simplicity.edu",          "Quinta Clase"],
-  ["CIE",  "Kinder",    "angelica.lopez@simplicity.edu",        "Cuarta Clase"],
-  ["CIE",  "Primero",   "angelica.lopez@simplicity.edu",        "Cuarta Clase"],
-  ["CIE",  "Quinto",    "yanuska.diaz@simplicity.edu",          "Primera clase"],
-  ["CIE",  "Segundo",   "walenda.nieves@simplicity.edu",        "Quinta Clase"],
-  ["CIE",  "Sexto",     "yanuska.diaz@simplicity.edu",          "Cuarta Clase"],
-  ["CIE",  "Tercero",   "walenda.nieves@simplicity.edu",        "Quinta Clase"],
-  ["CF",   "Octavo",    "yanuska.diaz@simplicity.edu",          "Segunda Clase IS"],
-  ["CQ",   "Septimo",   "yanuska.diaz@simplicity.edu",          "Segunda Clase IS"],
-  ["CS",   "Duodecimo", "filiberto.marmolejos@simplicity.edu",  "Cuarta Clase IS"],
-  ["CTE",  "Noveno",    "yanuska.diaz@simplicity.edu",          "Primera clase"],
-  ["EF",   "Cuarto",    "raul.perez@simplicity.edu",            "Tercera Clase"],
-  ["EF",   "Kinder",    "vanessa.nieves@simplicity.edu",        "Quinta Clase"],
-  ["EF",   "Primero",   "vanessa.nieves@simplicity.edu",        "Sexta Clase"],
-  ["EF",   "Quinto",    "vanessa.nieves@simplicity.edu",        "Segunda Clase"],
-  ["EF",   "Segundo",   "vanessa.nieves@simplicity.edu",        "Cuarta Clase"],
-  ["EF",   "Sexto",     "vanessa.nieves@simplicity.edu",        "Primera clase"],
-  ["EF",   "Tercero",   "vanessa.nieves@simplicity.edu",        "Cuarta Clase"],
-  ["ESC",  "Cuarto",    "walenda.nieves@simplicity.edu",        "Cuarta Clase"],
-  ["ESC",  "Quinto",    "angelica.lopez@simplicity.edu",        "Quinta Clase"],
-  ["ESP",  "Cuarto",    "vanessa.nieves@simplicity.edu",        "Primera clase"],
-  ["ESP",  "Decimo",    "emilienys.melendez@simplicity.edu",    "Segunda Clase IS"],
-  ["ESP",  "Duodecimo", "emilienys.melendez@simplicity.edu",    "Primera clase"],
-  ["ESP",  "Kinder",    "angelica.lopez@simplicity.edu",        "Primera clase"],
-  ["ESP",  "Noveno",    "emilienys.melendez@simplicity.edu",    "Tercera Clase IS"],
-  ["ESP",  "Octavo",    "emilienys.melendez@simplicity.edu",    "Quinta Clase IS"],
-  ["ESP",  "Primero",   "angelica.lopez@simplicity.edu",        "Primera clase"],
-  ["ESP",  "Quinto",    "vanessa.nieves@simplicity.edu",        "Cuarta Clase"],
-  ["ESP",  "Segundo",   "walenda.nieves@simplicity.edu",        "Primera clase"],
-  ["ESP",  "Septimo",   "emilienys.melendez@simplicity.edu",    "Quinta Clase IS"],
-  ["ESP",  "Sexto",     "vanessa.nieves@simplicity.edu",        "Quinta Clase"],
-  ["ESP",  "Tercero",   "walenda.nieves@simplicity.edu",        "Primera clase"],
-  ["ESP",  "Undecimo",  "emilienys.melendez@simplicity.edu",    "Primera clase"],
-  ["EST",  "Cuarto",    "michele.rodriguez@simplicity.edu",     "Primera clase"],
-  ["EST",  "Kinder",    "angelica.lopez@simplicity.edu",        "Tercera Clase"],
-  ["EST",  "Primero",   "angelica.lopez@simplicity.edu",        "Tercera Clase"],
-  ["EST",  "Quinto",    "michele.rodriguez@simplicity.edu",     "Tercera Clase"],
-  ["EST",  "Segundo",   "walenda.nieves@simplicity.edu",        "Tercera Clase"],
-  ["EST",  "Sexto",     "michele.rodriguez@simplicity.edu",     "Segunda Clase"],
-  ["EST",  "Tercero",   "walenda.nieves@simplicity.edu",        "Tercera Clase"],
-  ["FIS",  "Duodecimo", "brenda.gonzalez@simplicity.edu",       "Quinta Clase IS"],
-  ["GEO",  "Decimo",    "victor.ortiz@simplicity.edu",          "Tercera Clase IS"],
-  ["HCP",  "Decimo",    "filiberto.marmolejos@simplicity.edu",  "Primera clase"],
-  ["HMM",  "Noveno",    "filiberto.marmolejos@simplicity.edu",  "Segunda Clase IS"],
-  ["HIS",  "Septimo",   "filiberto.marmolejos@simplicity.edu",  "Tercera Clase IS"],
-  ["HEU",  "Undecimo",  "filiberto.marmolejos@simplicity.edu",  "Cuarta Clase IS"],
-  ["ING",  "Cuarto",    "raul.perez@simplicity.edu",            "Tercera Clase"],
-  ["ING",  "Decimo",    "lillibette.negron@simplicity.edu",     "Quinta Clase IS"],
-  ["ING",  "Duodecimo", "lillibette.negron@simplicity.edu",     "Tercera Clase IS"],
-  ["ING",  "Kinder",    "raul.perez@simplicity.edu",            "Quinta Clase"],
-  ["ING",  "Noveno",    "lillibette.negron@simplicity.edu",     "Cuarta Clase IS"],
-  ["ING",  "Octavo",    "lillibette.negron@simplicity.edu",     "Primera clase"],
-  ["ING",  "Primero",   "raul.perez@simplicity.edu",            "Quinta Clase"],
-  ["ING",  "Quinto",    "raul.perez@simplicity.edu",            "Segunda Clase"],
-  ["ING",  "Segundo",   "raul.perez@simplicity.edu",            "Cuarta Clase"],
-  ["ING",  "Septimo",   "lillibette.negron@simplicity.edu",     "Primera clase"],
-  ["ING",  "Sexto",     "raul.perez@simplicity.edu",            "Primera clase"],
-  ["ING",  "Tercero",   "raul.perez@simplicity.edu",            "Cuarta Clase"],
-  ["ING",  "Undecimo",  "lillibette.negron@simplicity.edu",     "Tercera Clase IS"],
-  ["MAT",  "Cuarto",    "brenda.gonzalez@simplicity.edu",       "Segunda Clase"],
-  ["MAT",  "Kinder",    "angelica.lopez@simplicity.edu",        "Segunda Clase"],
-  ["MAT",  "Primero",   "angelica.lopez@simplicity.edu",        "Segunda Clase"],
-  ["MAT",  "Quinto",    "brenda.gonzalez@simplicity.edu",       "Primera clase"],
-  ["MAT",  "Segundo",   "walenda.nieves@simplicity.edu",        "Segunda Clase"],
-  ["MAT",  "Sexto",     "brenda.gonzalez@simplicity.edu",       "Tercera Clase"],
-  ["MAT",  "Tercero",   "walenda.nieves@simplicity.edu",        "Segunda Clase"],
-  ["PALG", "Septimo",   "brenda.gonzalez@simplicity.edu",       "Cuarta Clase IS"],
-  ["PCAL", "Duodecimo", "victor.ortiz@simplicity.edu",          "Segunda Clase IS"],
-  ["QUI",  "Undecimo",  "victor.ortiz@simplicity.edu",          "Quinta Clase IS"],
-  ["SAL",  "Noveno",    "yanuska.diaz@simplicity.edu",          "Primera clase"],
-  ["SOC",  "Octavo",    "filiberto.marmolejos@simplicity.edu",  "Tercera Clase IS"],
-  ["TRI",  "Undecimo",  "victor.ortiz@simplicity.edu",          "Segunda Clase IS"],
-  ["VIR",  "Segundo",   "walenda.nieves@simplicity.edu",        "Primera clase"],
-  ["VIRE", "Segundo",   "raul.perez@simplicity.edu",            "Primera clase"],
+  ["ALG1", "Octavo",    "brenda",     "Cuarta Clase IS"],
+  ["ALG2", "Noveno",    "victor",     "Quinta Clase IS"],
+  ["BIO",  "Decimo",    "victor",     "Cuarta Clase IS"],
+  ["CIE",  "Cuarto",    "yanuska",    "Quinta Clase"],
+  ["CIE",  "Kinder",    "angelica",   "Cuarta Clase"],
+  ["CIE",  "Primero",   "angelica",   "Cuarta Clase"],
+  ["CIE",  "Quinto",    "yanuska",    "Primera clase"],
+  ["CIE",  "Segundo",   "walenda",    "Quinta Clase"],
+  ["CIE",  "Sexto",     "yanuska",    "Cuarta Clase"],
+  ["CIE",  "Tercero",   "walenda",    "Quinta Clase"],
+  ["CF",   "Octavo",    "yanuska",    "Segunda Clase IS"],
+  ["CQ",   "Septimo",   "yanuska",    "Segunda Clase IS"],
+  ["CS",   "Duodecimo", "filiberto",  "Cuarta Clase IS"],
+  ["CTE",  "Noveno",    "yanuska",    "Primera clase"],
+  ["EF",   "Cuarto",    "raul",       "Tercera Clase"],
+  ["EF",   "Kinder",    "vanessa",    "Quinta Clase"],
+  ["EF",   "Primero",   "vanessa",    "Sexta Clase"],
+  ["EF",   "Quinto",    "vanessa",    "Segunda Clase"],
+  ["EF",   "Segundo",   "vanessa",    "Cuarta Clase"],
+  ["EF",   "Sexto",     "vanessa",    "Primera clase"],
+  ["EF",   "Tercero",   "vanessa",    "Cuarta Clase"],
+  ["ESC",  "Cuarto",    "walenda",    "Cuarta Clase"],
+  ["ESC",  "Quinto",    "angelica",   "Quinta Clase"],
+  ["ESP",  "Cuarto",    "vanessa",    "Primera clase"],
+  ["ESP",  "Decimo",    "emilienys",  "Segunda Clase IS"],
+  ["ESP",  "Duodecimo", "emilienys",  "Primera clase"],
+  ["ESP",  "Kinder",    "angelica",   "Primera clase"],
+  ["ESP",  "Noveno",    "emilienys",  "Tercera Clase IS"],
+  ["ESP",  "Octavo",    "emilienys",  "Quinta Clase IS"],
+  ["ESP",  "Primero",   "angelica",   "Primera clase"],
+  ["ESP",  "Quinto",    "vanessa",    "Cuarta Clase"],
+  ["ESP",  "Segundo",   "walenda",    "Primera clase"],
+  ["ESP",  "Septimo",   "emilienys",  "Quinta Clase IS"],
+  ["ESP",  "Sexto",     "vanessa",    "Quinta Clase"],
+  ["ESP",  "Tercero",   "walenda",    "Primera clase"],
+  ["ESP",  "Undecimo",  "emilienys",  "Primera clase"],
+  ["EST",  "Cuarto",    "michele",    "Primera clase"],
+  ["EST",  "Kinder",    "angelica",   "Tercera Clase"],
+  ["EST",  "Primero",   "angelica",   "Tercera Clase"],
+  ["EST",  "Quinto",    "michele",    "Tercera Clase"],
+  ["EST",  "Segundo",   "walenda",    "Tercera Clase"],
+  ["EST",  "Sexto",     "michele",    "Segunda Clase"],
+  ["EST",  "Tercero",   "walenda",    "Tercera Clase"],
+  ["FIS",  "Duodecimo", "brenda",     "Quinta Clase IS"],
+  ["GEO",  "Decimo",    "victor",     "Tercera Clase IS"],
+  ["HCP",  "Decimo",    "filiberto",  "Primera clase"],
+  ["HMM",  "Noveno",    "filiberto",  "Segunda Clase IS"],
+  ["HIS",  "Septimo",   "filiberto",  "Tercera Clase IS"],
+  ["HEU",  "Undecimo",  "filiberto",  "Cuarta Clase IS"],
+  ["ING",  "Cuarto",    "raul",       "Tercera Clase"],
+  ["ING",  "Decimo",    "lillibette", "Quinta Clase IS"],
+  ["ING",  "Duodecimo", "lillibette", "Tercera Clase IS"],
+  ["ING",  "Kinder",    "raul",       "Quinta Clase"],
+  ["ING",  "Noveno",    "lillibette", "Cuarta Clase IS"],
+  ["ING",  "Octavo",    "lillibette", "Primera clase"],
+  ["ING",  "Primero",   "raul",       "Quinta Clase"],
+  ["ING",  "Quinto",    "raul",       "Segunda Clase"],
+  ["ING",  "Segundo",   "raul",       "Cuarta Clase"],
+  ["ING",  "Septimo",   "lillibette", "Primera clase"],
+  ["ING",  "Sexto",     "raul",       "Primera clase"],
+  ["ING",  "Tercero",   "raul",       "Cuarta Clase"],
+  ["ING",  "Undecimo",  "lillibette", "Tercera Clase IS"],
+  ["MAT",  "Cuarto",    "brenda",     "Segunda Clase"],
+  ["MAT",  "Kinder",    "angelica",   "Segunda Clase"],
+  ["MAT",  "Primero",   "angelica",   "Segunda Clase"],
+  ["MAT",  "Quinto",    "brenda",     "Primera clase"],
+  ["MAT",  "Segundo",   "walenda",    "Segunda Clase"],
+  ["MAT",  "Sexto",     "brenda",     "Tercera Clase"],
+  ["MAT",  "Tercero",   "walenda",    "Segunda Clase"],
+  ["PALG", "Septimo",   "brenda",     "Cuarta Clase IS"],
+  ["PCAL", "Duodecimo", "victor",     "Segunda Clase IS"],
+  ["QUI",  "Undecimo",  "victor",     "Quinta Clase IS"],
+  ["SAL",  "Noveno",    "yanuska",    "Primera clase"],
+  ["SOC",  "Octavo",    "filiberto",  "Tercera Clase IS"],
+  ["TRI",  "Undecimo",  "victor",     "Segunda Clase IS"],
+  ["VIR",  "Segundo",   "walenda",    "Primera clase"],
+  ["VIRE", "Segundo",   "raul",       "Primera clase"],
 ];
-
-const DEFAULT_PASSWORD = "Simplicity2025!";
 
 async function main() {
   // 1. Upsert materias
@@ -180,29 +177,36 @@ async function main() {
   }
   console.log(`✓ ${SUBJECTS.length} materias verificadas`);
 
-  // 2. Crear / actualizar maestros
-  const hashed = await bcrypt.hash(DEFAULT_PASSWORD, 10);
-  for (const t of TEACHERS) {
-    await prisma.teacher.upsert({
-      where: { email: t.email },
-      update: { name: t.name },
-      create: { name: t.name, email: t.email, password: hashed, role: "teacher" },
-    });
+  // 2. Cargar maestros de la DB y hacer mapa por primer nombre (case-insensitive)
+  const allTeachers = await prisma.teacher.findMany({ select: { id: true, name: true, email: true } });
+  console.log(`\nMaestros encontrados en DB (${allTeachers.length}):`);
+  allTeachers.forEach(t => console.log(`  ${t.name} — ${t.email}`));
+
+  // Mapa: keyword (primer nombre) → teacher
+  const teacherMap = new Map<string, typeof allTeachers[0]>();
+  for (const [key, keyword] of Object.entries(TEACHER_KEY)) {
+    const match = allTeachers.find(t =>
+      t.name.toLowerCase().includes(keyword.toLowerCase())
+    );
+    if (match) {
+      teacherMap.set(key, match);
+    } else {
+      console.warn(`  ⚠ No encontrado en DB: "${keyword}" (key: ${key})`);
+    }
   }
-  console.log(`✓ ${TEACHERS.length} maestros creados`);
 
   // 3. Crear clases
   let created = 0;
   let skipped = 0;
 
-  for (const [subjectCode, gradeSpanish, teacherEmail, period] of CLASSES) {
+  for (const [subjectCode, gradeSpanish, teacherKey, period] of CLASSES) {
     const subject = await prisma.subject.findUnique({ where: { code: subjectCode } });
     const gradeLabel = GRADE_MAP[gradeSpanish];
     const grade = await prisma.grade.findUnique({ where: { label: gradeLabel } });
-    const teacher = await prisma.teacher.findUnique({ where: { email: teacherEmail } });
+    const teacher = teacherMap.get(teacherKey);
 
     if (!subject || !grade || !teacher) {
-      console.warn(`  ⚠ No encontrado: ${subjectCode} / ${gradeSpanish} / ${teacherEmail}`);
+      console.warn(`  ⚠ Saltando: ${subjectCode}/${gradeSpanish} (teacher=${teacherKey})`);
       skipped++;
       continue;
     }
@@ -231,8 +235,6 @@ async function main() {
   }
 
   console.log(`\n✓ ${created} clases creadas, ${skipped} omitidas`);
-  console.log(`\nContraseña para todos los maestros nuevos: ${DEFAULT_PASSWORD}`);
-  console.log("Emails generados como: nombre.apellido@simplicity.edu");
 }
 
 main()

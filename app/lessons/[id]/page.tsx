@@ -5,6 +5,7 @@ import { generateLessonPlanAction, generateLessonWorkbookAction } from "@/app/le
 import { deleteWorkbook } from "@/app/workbooks/actions";
 import { type LessonFormat, type LessonPlanContent } from "@/lib/generate";
 import GenerateButton from "@/app/components/GenerateButton";
+import ActionButtons from "@/app/components/ActionButtons";
 
 const FORMAT_LABELS: Record<LessonFormat, string> = {
   ICAP: "ICAP",
@@ -32,6 +33,29 @@ export default async function LessonPage({ params }: { params: Promise<{ id: str
   const format = (lesson.format as LessonFormat) || "ICAP";
   const hasExpectations = lesson.expectations.length > 0;
 
+  const planText = plan
+    ? [
+        lesson.title,
+        `${lesson.unit.subject.name} · Grado ${lesson.unit.grade.label} · ${FORMAT_LABELS[format]}`,
+        "",
+        plan.overview ? `NOTA PARA EL MAESTRO\n${plan.overview}` : "",
+        plan.objectives.length
+          ? `\nOBJETIVOS\n${plan.objectives.map((o) => `• ${o}`).join("\n")}`
+          : "",
+        plan.materials.length
+          ? `\nMATERIALES\n${plan.materials.map((m) => `· ${m}`).join("\n")}`
+          : "",
+        ...plan.sections.map(
+          (s, i) =>
+            `\n${i + 1}. ${s.name}${s.durationMinutes ? ` (${s.durationMinutes} min)` : ""}\n${s.content}`,
+        ),
+        plan.teacherNotes ? `\nNOTAS DEL MAESTRO\n${plan.teacherNotes}` : "",
+        plan.assessment ? `\nEVALUACIÓN\n${plan.assessment}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n")
+    : "";
+
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
       {/* Encabezado */}
@@ -44,13 +68,11 @@ export default async function LessonPage({ params }: { params: Promise<{ id: str
             {lesson.title}
           </h1>
           {plan && (
-            <Link
-              href={`/lessons/${id}/print`}
-              target="_blank"
-              className="shrink-0 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100"
-            >
-              PDF
-            </Link>
+            <ActionButtons
+              printUrl={`/lessons/${id}/print`}
+              filename={`${lesson.title.replace(/\s+/g, "_")}.txt`}
+              textContent={planText}
+            />
           )}
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-500">

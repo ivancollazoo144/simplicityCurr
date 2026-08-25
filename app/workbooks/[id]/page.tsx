@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import type { WorkbookContent } from "@/lib/generate";
+import ActionButtons from "@/app/components/ActionButtons";
 
 export default async function WorkbookPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,6 +20,29 @@ export default async function WorkbookPage({ params }: { params: Promise<{ id: s
 
   const content = workbook.pages as unknown as WorkbookContent | null;
 
+  const wbText = content?.pages?.length
+    ? [
+        workbook.title,
+        workbook.unit
+          ? `${workbook.unit.subject.name} · Grado ${workbook.unit.grade.label}`
+          : "",
+        content.overview ? `\n${content.overview}` : "",
+        content.objectives?.length
+          ? `\nOBJETIVOS\n${content.objectives.map((o) => `• ${o}`).join("\n")}`
+          : "",
+        ...content.pages.map(
+          (p, i) =>
+            `\n${i + 1}. ${p.title}\n${p.content}${
+              p.exercises?.length
+                ? `\n\nEjercicios:\n${p.exercises.map((e, j) => `${j + 1}. ${e.prompt}`).join("\n")}`
+                : ""
+            }`,
+        ),
+      ]
+        .filter(Boolean)
+        .join("\n")
+    : "";
+
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
       <div className="mb-6">
@@ -31,12 +55,13 @@ export default async function WorkbookPage({ params }: { params: Promise<{ id: s
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
             {workbook.title}
           </h1>
-          <Link
-            href={`/workbooks/${workbook.id}/print`}
-            className="mt-1 whitespace-nowrap rounded bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand/90"
-          >
-            Imprimir / PDF
-          </Link>
+          {content?.pages?.length && (
+            <ActionButtons
+              printUrl={`/workbooks/${workbook.id}/print`}
+              filename={`${workbook.title.replace(/\s+/g, "_")}.txt`}
+              textContent={wbText}
+            />
+          )}
         </div>
         {workbook.unit && (
           <p className="mt-1 text-sm text-zinc-500">

@@ -15,8 +15,10 @@ export default function ActionButtons({ printUrl, filename, textContent }: Props
     const a = document.createElement("a");
     a.href = url;
     a.download = filename;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 200);
   };
 
   return (

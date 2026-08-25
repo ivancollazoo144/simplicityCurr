@@ -85,8 +85,10 @@ export default function ToolRowActions({ id, title, type, content }: Props) {
     const a = document.createElement("a");
     a.href = url;
     a.download = `${title.replace(/\s+/g, "_")}.txt`;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 200);
   };
 
   return (

@@ -6,6 +6,7 @@ import { toggleUnitExpectation } from "@/app/curriculum/actions";
 import { generateWorkbookForUnit, deleteWorkbook } from "@/app/workbooks/actions";
 import { createLesson, deleteLesson, generateWeekWorkbookAction } from "@/app/lessons/actions";
 import type { LessonFormat } from "@/lib/generate";
+import ExpectationsSearch from "../ExpectationsSearch";
 
 const FORMAT_LABELS: Record<LessonFormat, string> = {
   ICAP: "ICAP",
@@ -286,45 +287,12 @@ export default async function UnitPage({
               </div>
 
               {allExpectations.length > 0 && (
-                <div className="mt-4">
-                  <p className="mb-2 text-xs font-medium text-zinc-600">
-                    Estándares y expectativas — expande y marca las que aplican:
-                  </p>
-                  <div className="max-h-72 overflow-y-auto rounded-lg border border-zinc-200">
-                    {[...standardsMap.values()].map(({ standard, expectations }, i) => (
-                      <details
-                        key={standard.id}
-                        className={`${i > 0 ? "border-t border-zinc-100" : ""}`}
-                      >
-                        <summary className="flex cursor-pointer items-center gap-2 bg-zinc-50 px-3 py-2 hover:bg-zinc-100">
-                          <span className="font-mono text-xs text-zinc-400">{standard.code}</span>
-                          <span className="flex-1 text-xs font-medium text-zinc-700">
-                            {standard.description}
-                          </span>
-                          <span className="shrink-0 text-xs text-zinc-400">({expectations.length})</span>
-                        </summary>
-                        <ul className="divide-y divide-zinc-100">
-                          {expectations.map((exp) => (
-                            <li key={exp.id}>
-                              <label className="flex cursor-pointer items-start gap-2 px-4 py-2 hover:bg-zinc-50">
-                                <input
-                                  type="checkbox"
-                                  name="expectationId"
-                                  value={exp.id}
-                                  className="mt-0.5 shrink-0"
-                                />
-                                <span className="text-xs text-zinc-700">
-                                  <span className="font-mono text-zinc-400">{exp.code}</span>{" "}
-                                  {exp.description}
-                                </span>
-                              </label>
-                            </li>
-                          ))}
-                        </ul>
-                      </details>
-                    ))}
-                  </div>
-                </div>
+                <ExpectationsSearch
+                  groups={[...standardsMap.values()].map(({ standard, expectations }) => ({
+                    standard: { id: standard.id, code: standard.code, description: standard.description },
+                    expectations: expectations.map((e) => ({ id: e.id, code: e.code, description: e.description })),
+                  }))}
+                />
               )}
 
               <button

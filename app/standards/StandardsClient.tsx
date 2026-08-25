@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle, ClipboardList, X } from "lucide-react";
+import { CheckCircle, ClipboardList, X, Search } from "lucide-react";
 import { SubjectGradeFilter } from "@/app/components/SubjectGradeFilter";
 import { createLessonFromExpectationsAction } from "./actions";
 
@@ -59,6 +59,7 @@ export default function StandardsClient({
   const [panelOpen, setPanelOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -95,10 +96,28 @@ export default function StandardsClient({
     });
   };
 
+  const q = query.trim().toLowerCase();
+  const filteredStandards = q
+    ? standards
+        .map((std) => {
+          const stdMatches =
+            std.code.toLowerCase().includes(q) ||
+            std.description.toLowerCase().includes(q);
+          const filteredExps = std.expectations.filter(
+            (e) =>
+              e.code.toLowerCase().includes(q) ||
+              e.description.toLowerCase().includes(q),
+          );
+          if (!stdMatches && filteredExps.length === 0) return null;
+          return { ...std, expectations: stdMatches ? std.expectations : filteredExps };
+        })
+        .filter(Boolean) as typeof standards
+    : standards;
+
   return (
     <div className="pb-32">
       {/* Filters */}
-      <div className="mb-8">
+      <div className="mb-4">
         <SubjectGradeFilter
           subjects={subjects}
           grades={grades}
@@ -106,6 +125,31 @@ export default function StandardsClient({
           basePath="/standards"
         />
       </div>
+
+      {/* Search bar */}
+      {standards.length > 0 && (
+        <div className="relative mb-6">
+          <Search
+            size={15}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+          />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar por código (ej. MA.N.5.1) o descripción…"
+            className="w-full rounded-lg border border-zinc-200 bg-white py-2.5 pl-9 pr-4 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-brand focus:ring-2 focus:ring-brand/20"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Hint */}
       {standards.length > 0 && (
@@ -126,8 +170,15 @@ export default function StandardsClient({
         </p>
       )}
 
+      {/* No search results */}
+      {q && filteredStandards.length === 0 && standards.length > 0 && (
+        <p className="rounded-lg border border-zinc-200 bg-white p-6 text-sm text-zinc-500">
+          No se encontraron estándares o expectativas para <strong>"{query}"</strong>.
+        </p>
+      )}
+
       {/* Standards list */}
-      {standards.map((std) => {
+      {filteredStandards.map((std) => {
         const stdExpIds = std.expectations.map((e) => e.id);
         const coveredCount = std.expectations.filter((e) => e.covered).length;
         const allCovered = coveredCount === std.expectations.length && std.expectations.length > 0;

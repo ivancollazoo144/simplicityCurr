@@ -16,7 +16,10 @@ export default async function StandardsPage({
   const { teacherId } = await requireSession();
 
   const [subjects, grades, classes] = await Promise.all([
-    prisma.subject.findMany({ orderBy: { name: "asc" } }),
+    prisma.subject.findMany({
+      where: { standards: { some: {} } },
+      orderBy: { name: "asc" },
+    }),
     prisma.grade.findMany({ orderBy: { order: "asc" } }),
     prisma.unit.findMany({
       where: {

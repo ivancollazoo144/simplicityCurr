@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { deleteToolOutputAction } from "./actions";
+import ToolRowActions from "./ToolRowActions";
 
 const TOOLS = [
   {
@@ -136,19 +137,19 @@ export default async function ToolsPage() {
                     {output.title}
                   </Link>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <span className="text-xs text-zinc-400">
                     {new Date(output.createdAt).toLocaleDateString("es-PR", {
                       month: "short",
                       day: "numeric",
                     })}
                   </span>
-                  <Link
-                    href={`/tools/${output.id}`}
-                    className="rounded-lg border border-zinc-300 px-3 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-100"
-                  >
-                    Ver
-                  </Link>
+                  <ToolRowActions
+                    id={output.id}
+                    title={output.title}
+                    type={output.type}
+                    content={output.content}
+                  />
                   <form action={deleteToolOutputAction}>
                     <input type="hidden" name="id" value={output.id} />
                     <button className="rounded-lg border border-red-200 px-3 py-1 text-xs font-medium text-red-500 hover:bg-red-50">

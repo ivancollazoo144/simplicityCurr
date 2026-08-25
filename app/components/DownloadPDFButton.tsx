@@ -13,31 +13,47 @@ export function DownloadPDFButton({ printUrl, filename }: Props) {
 
   const handleDownload = async () => {
     setLoading(true);
+    const wrapper = document.createElement("div");
     try {
       const html2pdf = (await import("html2pdf.js")).default;
+
       const res = await fetch(printUrl, { credentials: "same-origin" });
       const html = await res.text();
 
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, "text/html");
 
-      // Remove the toolbar (print:hidden elements)
+      // Remove the print toolbar
       doc.querySelectorAll('[class*="print:hidden"]').forEach((el) => el.remove());
 
       const main = doc.querySelector("main") ?? doc.body;
 
+      // Inject into the current document so Tailwind CSS applies
+      wrapper.style.cssText =
+        "position:fixed;top:-9999px;left:-9999px;width:816px;background:white;z-index:-1;";
+      wrapper.innerHTML = main.innerHTML;
+      document.body.appendChild(wrapper);
+
+      // Small delay so styles compute
+      await new Promise((r) => setTimeout(r, 300));
+
+      const pdfFilename = filename.endsWith(".pdf") ? filename : filename + ".pdf";
+
       await html2pdf()
         .set({
           margin: [10, 10, 10, 10],
-          filename: filename.endsWith(".pdf") ? filename : filename + ".pdf",
+          filename: pdfFilename,
           html2canvas: { scale: 2, useCORS: true, logging: false },
           jsPDF: { unit: "mm", format: "letter", orientation: "portrait" },
         })
-        .from(main)
+        .from(wrapper)
         .save();
     } catch (e) {
       console.error("PDF generation failed", e);
+      // Fallback: open print page
+      window.open(printUrl, "_blank");
     } finally {
+      if (wrapper.parentNode) document.body.removeChild(wrapper);
       setLoading(false);
     }
   };

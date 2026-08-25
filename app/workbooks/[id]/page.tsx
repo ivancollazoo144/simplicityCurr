@@ -56,7 +56,10 @@ export default async function WorkbookPage({ params }: { params: Promise<{ id: s
             {workbook.title}
           </h1>
           {content?.pages?.length && (
-            <ActionButtons printUrl={`/workbooks/${workbook.id}/print`} />
+            <ActionButtons
+              printUrl={`/workbooks/${workbook.id}/print`}
+              filename={workbook.title.replace(/\s+/g, "_")}
+            />
           )}
         </div>
         {workbook.unit && (

@@ -55,7 +55,10 @@ export default async function ToolOutputPage({ params }: { params: Promise<{ id:
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <ActionButtons printUrl={`/tools/${output.id}/print`} />
+          <ActionButtons
+            printUrl={`/tools/${output.id}/print`}
+            filename={output.title.replace(/\s+/g, "_")}
+          />
           <form action={deleteToolOutputAction}>
             <input type="hidden" name="id" value={output.id} />
             <button className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50">

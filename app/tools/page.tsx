@@ -144,7 +144,7 @@ export default async function ToolsPage() {
                       day: "numeric",
                     })}
                   </span>
-                  <ToolRowActions id={output.id} />
+                  <ToolRowActions id={output.id} title={output.title} />
                   <form action={deleteToolOutputAction}>
                     <input type="hidden" name="id" value={output.id} />
                     <button className="rounded-lg border border-red-200 px-3 py-1 text-xs font-medium text-red-500 hover:bg-red-50">

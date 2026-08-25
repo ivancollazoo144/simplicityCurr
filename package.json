@@ -24,6 +24,7 @@
     "@types/react-dom": "^19",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
+    "html2pdf.js": "^0.14.0",
     "iron-session": "^8.0.4",
     "lucide-react": "^1.25.0",
     "mammoth": "^1.12.0",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.13",
+    "@types/html2pdf.js": "^0.10.0",
     "@types/pdf-parse": "^1.1.5",
     "@types/pg": "^8.20.0",
     "eslint": "^9",

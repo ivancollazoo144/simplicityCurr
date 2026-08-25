@@ -67,7 +67,12 @@ export default async function LessonPage({ params }: { params: Promise<{ id: str
           <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
             {lesson.title}
           </h1>
-          {plan && <ActionButtons printUrl={`/lessons/${id}/print`} />}
+          {plan && (
+            <ActionButtons
+              printUrl={`/lessons/${id}/print`}
+              filename={lesson.title.replace(/\s+/g, "_")}
+            />
+          )}
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
           <span>{lesson.unit.subject.name} · Grado {lesson.unit.grade.label}</span>

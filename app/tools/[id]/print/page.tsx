@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { PrintButton } from "@/app/workbooks/[id]/print/PrintButton";
+import { AutoPrint } from "@/app/components/AutoPrint";
 import type {
   RubricContent,
   QuizContent,
@@ -23,6 +24,7 @@ export default async function ToolOutputPrintPage({ params }: { params: Promise<
 
   return (
     <main className="mx-auto w-full max-w-3xl bg-white px-8 py-10 text-black">
+      <AutoPrint />
       <div className="mb-6 flex items-center justify-between print:hidden">
         <a href={`/tools/${output.id}`} className="text-sm text-indigo-600 hover:underline">
           ← Volver

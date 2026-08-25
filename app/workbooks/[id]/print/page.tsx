@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import type { WorkbookContent } from "@/lib/generate";
 import { PrintButton } from "./PrintButton";
+import { AutoPrint } from "@/app/components/AutoPrint";
 
 export default async function WorkbookPrintPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,6 +22,7 @@ export default async function WorkbookPrintPage({ params }: { params: Promise<{ 
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 bg-white px-8 py-10 text-black">
+      <AutoPrint />
       {/* Barra de acciones (oculta al imprimir) */}
       <div className="mb-6 flex items-center justify-between print:hidden">
         <a href={`/workbooks/${workbook.id}`} className="text-sm text-indigo-600 hover:underline">

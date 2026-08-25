@@ -151,15 +151,26 @@ export default function StandardsClient({
         </div>
       )}
 
-      {/* Hint */}
-      {standards.length > 0 && (
-        <p className="mb-4 text-xs text-zinc-400">
-          Haz clic en las expectativas para seleccionarlas y crear un plan de trabajo.
-          <span className="ml-2 inline-flex items-center gap-1 text-brand-teal">
-            <CheckCircle size={11} /> = ya cubierta en tus unidades
-          </span>
-        </p>
-      )}
+      {/* Coverage summary bar */}
+      {standards.length > 0 && (() => {
+        const totalExp = standards.reduce((a, s) => a + s.expectations.length, 0);
+        const totalCov = standards.reduce((a, s) => a + s.expectations.filter(e => e.covered).length, 0);
+        const pct = totalExp > 0 ? Math.round((totalCov / totalExp) * 100) : 0;
+        return (
+          <div className="mb-5 rounded-xl border border-zinc-200 bg-white px-5 py-4">
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <span className="font-medium text-zinc-700">Cobertura de expectativas</span>
+              <span className="font-semibold text-brand-teal">{totalCov} / {totalExp} cubiertas · {pct}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100">
+              <div className="h-full rounded-full bg-brand-teal transition-all" style={{ width: `${pct}%` }} />
+            </div>
+            <p className="mt-2 text-xs text-zinc-400">
+              Haz clic en las expectativas para seleccionarlas y crear un plan de trabajo.
+            </p>
+          </div>
+        );
+      })()}
 
       {/* Empty state */}
       {standards.length === 0 && (
@@ -183,31 +194,54 @@ export default function StandardsClient({
         const coveredCount = std.expectations.filter((e) => e.covered).length;
         const allCovered = coveredCount === std.expectations.length && std.expectations.length > 0;
 
+        const stdPct = std.expectations.length > 0
+          ? Math.round((coveredCount / std.expectations.length) * 100)
+          : 0;
+
         return (
           <div key={std.id} className="mb-6">
             <div
               className={`mb-2 rounded-xl border px-5 py-4 ${
-                allCovered ? "border-teal-200 bg-teal-50" : "border-zinc-200 bg-white"
+                allCovered
+                  ? "border-teal-300 bg-teal-50"
+                  : coveredCount > 0
+                  ? "border-teal-100 bg-white"
+                  : "border-zinc-200 bg-white"
               }`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-xs text-zinc-600">
+                    <span className={`rounded px-1.5 py-0.5 font-mono text-xs ${
+                      allCovered ? "bg-teal-100 text-teal-700" : "bg-zinc-100 text-zinc-600"
+                    }`}>
                       {std.code}
                     </span>
                     {allCovered && (
-                      <span className="flex items-center gap-1 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-brand-teal">
-                        <CheckCircle size={10} /> Cubierto
+                      <span className="flex items-center gap-1 rounded-full bg-teal-600 px-2.5 py-0.5 text-xs font-semibold text-white">
+                        <CheckCircle size={11} /> Cubierto completo
                       </span>
                     )}
                     {!allCovered && coveredCount > 0 && (
-                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">
-                        {coveredCount}/{std.expectations.length} cubiertas
+                      <span className="flex items-center gap-1 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-700">
+                        <CheckCircle size={10} /> {coveredCount}/{std.expectations.length} cubiertas
                       </span>
                     )}
                   </div>
                   <p className="mt-1.5 text-sm font-medium text-zinc-900">{std.description}</p>
+
+                  {/* Mini progress bar */}
+                  {std.expectations.length > 0 && (
+                    <div className="mt-2.5 flex items-center gap-2">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-zinc-100">
+                        <div
+                          className="h-full rounded-full bg-teal-500 transition-all"
+                          style={{ width: `${stdPct}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-zinc-400">{stdPct}%</span>
+                    </div>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -230,30 +264,36 @@ export default function StandardsClient({
                         isSelected
                           ? "bg-brand/10 ring-1 ring-brand/30"
                           : exp.covered
-                          ? "bg-teal-50/60 hover:bg-teal-50"
+                          ? "bg-teal-50 ring-1 ring-teal-100 hover:bg-teal-100/60"
                           : "hover:bg-zinc-50"
                       }`}
                     >
                       <span
                         className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
-                          isSelected ? "border-brand bg-brand text-white" : "border-zinc-300 bg-white"
+                          isSelected
+                            ? "border-brand bg-brand text-white"
+                            : exp.covered
+                            ? "border-teal-400 bg-teal-400 text-white"
+                            : "border-zinc-300 bg-white"
                         }`}
                       >
-                        {isSelected && (
+                        {(isSelected || exp.covered) && (
                           <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 10 10" stroke="currentColor" strokeWidth={2.5}>
                             <path d="M1.5 5l2.5 2.5 4.5-4.5" />
                           </svg>
                         )}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <span className="mr-1.5 font-mono text-xs text-zinc-400">{exp.code}</span>
+                        <span className={`mr-1.5 font-mono text-xs ${exp.covered ? "text-teal-600" : "text-zinc-400"}`}>
+                          {exp.code}
+                        </span>
                         <span className={exp.covered ? "text-zinc-600" : "text-zinc-700"}>
                           {exp.description}
                         </span>
                       </div>
                       {exp.covered && (
-                        <span title="Ya cubierta en una de tus unidades" className="shrink-0">
-                          <CheckCircle size={14} className="text-brand-teal" />
+                        <span className="shrink-0 rounded-full bg-teal-600 px-2 py-0.5 text-xs font-semibold text-white">
+                          Cubierta
                         </span>
                       )}
                     </li>

@@ -3,7 +3,6 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { PrintButton } from "./PrintButton";
-import { AutoPrint } from "@/app/components/AutoPrint";
 import { type LessonFormat, type LessonPlanContent } from "@/lib/generate";
 
 const FORMAT_LABELS: Record<LessonFormat, string> = {
@@ -33,7 +32,6 @@ export default async function LessonPrintPage({ params }: { params: Promise<{ id
 
   return (
     <div className="min-h-screen bg-zinc-100 print:bg-white">
-      <AutoPrint />
       {/* Toolbar — oculto al imprimir */}
       <div className="print:hidden sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-3 shadow-sm">
         <Link href={`/lessons/${id}`} className="text-sm text-indigo-600 hover:underline">

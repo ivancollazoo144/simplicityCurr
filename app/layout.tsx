@@ -35,20 +35,22 @@ export default async function RootLayout({
     >
       <body className="flex min-h-full bg-zinc-50">
         {session.teacherId && (
-          <AppSidebar
-            teacherName={session.teacherName ?? null}
-            role={session.role ?? null}
-          />
+          <div className="print:hidden">
+            <AppSidebar
+              teacherName={session.teacherName ?? null}
+              role={session.role ?? null}
+            />
+          </div>
         )}
 
         {/* Main content — offset by sidebar on desktop, top bar on mobile */}
         <div
           className={`flex min-h-full flex-1 flex-col ${
-            session.teacherId ? "lg:pl-56" : ""
+            session.teacherId ? "lg:pl-56 print:pl-0" : ""
           }`}
         >
           {/* Mobile top-bar spacer */}
-          {session.teacherId && <div className="h-14 lg:hidden" />}
+          {session.teacherId && <div className="h-14 lg:hidden print:hidden" />}
 
           <div className="flex flex-1 flex-col bg-white">
             {children}

@@ -151,26 +151,6 @@ export default function StandardsClient({
         </div>
       )}
 
-      {/* Coverage summary bar */}
-      {standards.length > 0 && (() => {
-        const totalExp = standards.reduce((a, s) => a + s.expectations.length, 0);
-        const totalCov = standards.reduce((a, s) => a + s.expectations.filter(e => e.covered).length, 0);
-        const pct = totalExp > 0 ? Math.round((totalCov / totalExp) * 100) : 0;
-        return (
-          <div className="mb-5 rounded-xl border border-zinc-200 bg-white px-5 py-4">
-            <div className="mb-2 flex items-center justify-between text-sm">
-              <span className="font-medium text-zinc-700">Cobertura de expectativas</span>
-              <span className="font-semibold text-brand-teal">{totalCov} / {totalExp} cubiertas · {pct}%</span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100">
-              <div className="h-full rounded-full bg-brand-teal transition-all" style={{ width: `${pct}%` }} />
-            </div>
-            <p className="mt-2 text-xs text-zinc-400">
-              Haz clic en las expectativas para seleccionarlas y crear un plan de trabajo.
-            </p>
-          </div>
-        );
-      })()}
 
       {/* Empty state */}
       {standards.length === 0 && (

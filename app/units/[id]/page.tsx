@@ -7,6 +7,7 @@ import { generateWorkbookForUnit, deleteWorkbook } from "@/app/workbooks/actions
 import { createLesson, deleteLesson, generateWeekWorkbookAction } from "@/app/lessons/actions";
 import type { LessonFormat } from "@/lib/generate";
 import ExpectationsSearch from "../ExpectationsSearch";
+import { LessonFormFields } from "../LessonFormFields";
 
 const FORMAT_LABELS: Record<LessonFormat, string> = {
   ICAP: "ICAP",
@@ -251,42 +252,7 @@ export default async function UnitPage({
             </div>
             <form action={createLesson} className="px-5 py-4">
               <input type="hidden" name="unitId" value={unit.id} />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <input
-                  name="title"
-                  required
-                  placeholder="Título de la lección"
-                  className="rounded-lg border border-zinc-300 px-3 py-2 text-sm sm:col-span-2"
-                />
-                <select
-                  name="format"
-                  className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-                >
-                  <option value="">— Formato —</option>
-                  <option value="SEMANAL">Semanal (Lun–Vie)</option>
-                  <option value="ICAP">ICAP</option>
-                  <option value="WARMUP">Warm Up</option>
-                  <option value="5E">5E</option>
-                  <option value="INQUIRY">Indagación</option>
-                  <option value="UDL">UDL</option>
-                </select>
-                <div className="grid grid-cols-2 gap-3">
-                  <input
-                    name="durationMinutes"
-                    type="number"
-                    min="1"
-                    placeholder="Duración (min)"
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-                  />
-                  <input
-                    name="weekNumber"
-                    type="number"
-                    min="1"
-                    placeholder="Semana"
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-                  />
-                </div>
-              </div>
+              <LessonFormFields />
 
               {allExpectations.length > 0 && (
                 <ExpectationsSearch

@@ -90,7 +90,10 @@ export default async function LessonPage({ params }: { params: Promise<{ id: str
               {FORMAT_LABELS[format]}
             </span>
           )}
-          {lesson.durationMinutes && <span>{lesson.durationMinutes} min</span>}
+          {format === "SEMANAL"
+            ? <span>5 días · Lun–Vie</span>
+            : lesson.durationMinutes && <span>{lesson.durationMinutes} min</span>
+          }
           {lesson.weekNumber && <span>Semana {lesson.weekNumber}</span>}
           {hasExpectations && (
             <span className="text-xs text-zinc-400">

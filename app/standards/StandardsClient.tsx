@@ -6,6 +6,7 @@ import { SubjectGradeFilter } from "@/app/components/SubjectGradeFilter";
 import { createLessonFromExpectationsAction } from "./actions";
 
 const FORMAT_OPTIONS = [
+  { value: "SEMANAL", label: "Semanal (Lun–Vie)" },
   { value: "ICAP", label: "ICAP" },
   { value: "5E", label: "5 E's" },
   { value: "UDL", label: "UDL" },

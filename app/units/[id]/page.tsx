@@ -14,6 +14,7 @@ const FORMAT_LABELS: Record<LessonFormat, string> = {
   "5E": "5E",
   INQUIRY: "Indagación",
   UDL: "UDL",
+  SEMANAL: "Semanal",
 };
 
 type Tab = "planes" | "expectativas" | "cuadernos";
@@ -262,6 +263,7 @@ export default async function UnitPage({
                   className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
                 >
                   <option value="">— Formato —</option>
+                  <option value="SEMANAL">Semanal (Lun–Vie)</option>
                   <option value="ICAP">ICAP</option>
                   <option value="WARMUP">Warm Up</option>
                   <option value="5E">5E</option>

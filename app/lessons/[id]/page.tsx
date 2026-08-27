@@ -13,6 +13,15 @@ const FORMAT_LABELS: Record<LessonFormat, string> = {
   "5E": "5E",
   INQUIRY: "Indagación",
   UDL: "UDL",
+  SEMANAL: "Semanal",
+};
+
+const DAY_COLORS: Record<string, string> = {
+  Lunes:     "bg-blue-500",
+  Martes:    "bg-teal-500",
+  Miércoles: "bg-violet-500",
+  Jueves:    "bg-amber-500",
+  Viernes:   "bg-rose-500",
 };
 
 export default async function LessonPage({ params }: { params: Promise<{ id: string }> }) {
@@ -163,29 +172,56 @@ export default async function LessonPage({ params }: { params: Promise<{ id: str
             </div>
 
             {/* Secciones */}
-            <div className="space-y-3">
-              {plan.sections.map((sec, i) => (
-                <div key={i} className="overflow-hidden rounded-xl border border-zinc-200">
-                  <div className="flex items-center gap-3 px-4 py-3" style={{ backgroundColor: "#1A7A6B" }}>
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: "#E8521A" }}>
-                      {i + 1}
-                    </span>
-                    <h3 className="flex-1 font-semibold text-white">{sec.name}</h3>
-                    {sec.durationMinutes && (
-                      <span className="text-xs text-white/70">{sec.durationMinutes} min</span>
-                    )}
+            {format === "SEMANAL" ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {plan.sections.map((sec, i) => {
+                  const dotColor = DAY_COLORS[sec.name] ?? "bg-zinc-400";
+                  return (
+                    <div key={i} className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
+                      <div className="flex items-center gap-2 border-b border-zinc-100 px-4 py-2.5">
+                        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dotColor}`} />
+                        <h3 className="font-semibold text-zinc-900">{sec.name}</h3>
+                        {sec.durationMinutes && (
+                          <span className="ml-auto text-xs text-zinc-400">{sec.durationMinutes} min</span>
+                        )}
+                      </div>
+                      <div className="px-4 py-3">
+                        <p className="text-sm leading-relaxed text-zinc-700 whitespace-pre-line">{sec.content}</p>
+                        {sec.materials && sec.materials.length > 0 && (
+                          <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-zinc-400">
+                            {sec.materials.map((m, j) => <li key={j}>· {m}</li>)}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {plan.sections.map((sec, i) => (
+                  <div key={i} className="overflow-hidden rounded-xl border border-zinc-200">
+                    <div className="flex items-center gap-3 px-4 py-3" style={{ backgroundColor: "#1A7A6B" }}>
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: "#E8521A" }}>
+                        {i + 1}
+                      </span>
+                      <h3 className="flex-1 font-semibold text-white">{sec.name}</h3>
+                      {sec.durationMinutes && (
+                        <span className="text-xs text-white/70">{sec.durationMinutes} min</span>
+                      )}
+                    </div>
+                    <div className="bg-white px-4 py-3">
+                      <p className="text-sm leading-relaxed text-zinc-700 whitespace-pre-line">{sec.content}</p>
+                      {sec.materials && sec.materials.length > 0 && (
+                        <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-zinc-400">
+                          {sec.materials.map((m, j) => <li key={j}>· {m}</li>)}
+                        </ul>
+                      )}
+                    </div>
                   </div>
-                  <div className="bg-white px-4 py-3">
-                    <p className="text-sm leading-relaxed text-zinc-700 whitespace-pre-line">{sec.content}</p>
-                    {sec.materials && sec.materials.length > 0 && (
-                      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-zinc-400">
-                        {sec.materials.map((m, j) => <li key={j}>· {m}</li>)}
-                      </ul>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             {/* YouTube */}
             {plan.youtubeResources.length > 0 && (

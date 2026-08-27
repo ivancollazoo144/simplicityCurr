@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import type { LessonFormat } from "@/lib/generate";
 
-const VALID_FORMATS: LessonFormat[] = ["ICAP", "WARMUP", "5E", "INQUIRY", "UDL"];
+const VALID_FORMATS: LessonFormat[] = ["ICAP", "WARMUP", "5E", "INQUIRY", "UDL", "SEMANAL"];
 
 export async function createLessonFromExpectationsAction(formData: FormData) {
   const { teacherId } = await requireSession();

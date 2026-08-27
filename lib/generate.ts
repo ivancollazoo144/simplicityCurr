@@ -21,7 +21,7 @@ export type GenerateInput = {
 
 // --- Planes de trabajo ---
 
-export type LessonFormat = "ICAP" | "WARMUP" | "5E" | "INQUIRY" | "UDL";
+export type LessonFormat = "ICAP" | "WARMUP" | "5E" | "INQUIRY" | "UDL" | "SEMANAL";
 
 export type YouTubeResource = {
   query: string;
@@ -85,6 +85,7 @@ export const FORMAT_SECTIONS: Record<LessonFormat, string[]> = {
   "5E":    ["Engage (Motivar)", "Explore (Explorar)", "Explain (Explicar)", "Elaborate (Elaborar)", "Evaluate (Evaluar)"],
   INQUIRY: ["Cuestionamiento", "Exploración", "Investigación"],
   UDL:     ["Compromiso (Engagement)", "Representación", "Expresión y Acción"],
+  SEMANAL: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"],
 };
 
 const MODEL = process.env.GENERATION_MODEL ?? "claude-haiku-4-5-20251001";
@@ -205,6 +206,46 @@ function buildLessonPlanPrompt(input: GenerateLessonPlanInput): string {
   const sections = FORMAT_SECTIONS[input.format];
   const exps = input.expectations.map((e) => `- ${e.code} (${e.standard}): ${e.description}`).join("\n");
   const lang = input.language === "en" ? "inglés" : "español";
+
+  if (input.format === "SEMANAL") {
+    return `Crea una planificación SEMANAL para "${input.lessonTitle}"
+de la unidad "${input.unitTitle}" de ${input.subject}, grado ${input.grade}.
+Idioma del contenido: ${lang}.
+
+Expectativas del DEPR a cubrir durante la semana:
+${exps}
+
+Genera un plan para 5 días de clase (Lunes a Viernes). Cada día debe tener:
+- Actividades concretas y variadas (no repetir el mismo tipo de actividad cada día)
+- Materiales específicos del día
+- Duración estimada en minutos (típicamente 45-60 min por día)
+- El día debe avanzar progresivamente: Lunes = introducción/motivación, Martes-Miércoles = desarrollo/práctica,
+  Jueves = profundización/aplicación, Viernes = cierre/evaluación/síntesis
+
+Genera también 2-3 recursos de YouTube útiles para la semana.
+Para cada recurso devuelve solo la consulta de búsqueda ("query") y una etiqueta descriptiva ("label").
+NO incluyas el campo "url".
+
+Devuelve JSON con esta forma EXACTA:
+{
+  "format": "SEMANAL",
+  "title": "string",
+  "overview": "string (2-3 oraciones describiendo el arco de la semana para el maestro)",
+  "objectives": ["string (objetivos generales de la semana, 3-5)"],
+  "materials": ["string (materiales generales de la semana)"],
+  "sections": [
+    { "name": "Lunes", "durationMinutes": number, "content": "string (actividades detalladas)", "materials": ["string"] },
+    { "name": "Martes", "durationMinutes": number, "content": "string", "materials": ["string"] },
+    { "name": "Miércoles", "durationMinutes": number, "content": "string", "materials": ["string"] },
+    { "name": "Jueves", "durationMinutes": number, "content": "string", "materials": ["string"] },
+    { "name": "Viernes", "durationMinutes": number, "content": "string", "materials": ["string"] }
+  ],
+  "youtubeResources": [{ "query": "string", "label": "string" }],
+  "teacherNotes": "string_or_null",
+  "assessment": "string_or_null"
+}`;
+  }
+
   return `Crea un plan de trabajo en formato ${input.format} para la lección "${input.lessonTitle}"
 de la unidad "${input.unitTitle}" de ${input.subject}, grado ${input.grade}.
 ${input.durationMinutes ? `Duración total: ${input.durationMinutes} minutos.\n` : ""}Idioma del contenido: ${lang}.

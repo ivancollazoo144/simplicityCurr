@@ -5,7 +5,7 @@ import { requireAdmin } from "@/lib/session";
 import type { LessonFormat, LessonPlanContent } from "@/lib/generate";
 
 const FORMAT_LABELS: Record<LessonFormat, string> = {
-  ICAP: "ICAP", WARMUP: "Warm Up", "5E": "5E", INQUIRY: "Indagación", UDL: "UDL",
+  ICAP: "ICAP", WARMUP: "Warm Up", "5E": "5E", INQUIRY: "Indagación", UDL: "UDL", SEMANAL: "Semanal",
 };
 
 export default async function TeacherDetailPage({ params }: { params: Promise<{ id: string }> }) {

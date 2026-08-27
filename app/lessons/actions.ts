@@ -21,6 +21,7 @@ export async function createLesson(formData: FormData) {
   if (!unitId || !title) return;
 
   const format = (formData.get("format") as LessonFormat | null) || null;
+  const isWeekly = formData.get("isWeekly") === "1";
   const durationRaw = formData.get("durationMinutes");
   const weekRaw = formData.get("weekNumber");
   const expectationIds = formData.getAll("expectationId").map(String).filter(Boolean);
@@ -34,7 +35,8 @@ export async function createLesson(formData: FormData) {
       unitId,
       title,
       format: format || null,
-      durationMinutes: durationRaw ? Number(durationRaw) : null,
+      isWeekly,
+      durationMinutes: isWeekly ? null : (durationRaw ? Number(durationRaw) : null),
       weekNumber: weekRaw ? Number(weekRaw) : null,
       order,
     },
@@ -105,6 +107,7 @@ export async function generateLessonPlanAction(formData: FormData) {
 
   const plan = await generateLessonPlan({
     format,
+    isWeekly: lesson.isWeekly,
     subject: lesson.unit.subject.name,
     grade: lesson.unit.grade.label,
     lessonTitle: lesson.title,

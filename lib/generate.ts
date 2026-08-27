@@ -21,7 +21,7 @@ export type GenerateInput = {
 
 // --- Planes de trabajo ---
 
-export type LessonFormat = "ICAP" | "WARMUP" | "5E" | "INQUIRY" | "UDL" | "SEMANAL";
+export type LessonFormat = "ICAP" | "WARMUP" | "5E" | "INQUIRY" | "UDL";
 
 export type YouTubeResource = {
   query: string;
@@ -50,6 +50,7 @@ export type LessonPlanContent = {
 
 export type GenerateLessonPlanInput = {
   format: LessonFormat;
+  isWeekly?: boolean;
   subject: string;
   grade: string;
   lessonTitle: string;
@@ -85,7 +86,6 @@ export const FORMAT_SECTIONS: Record<LessonFormat, string[]> = {
   "5E":    ["Engage (Motivar)", "Explore (Explorar)", "Explain (Explicar)", "Elaborate (Elaborar)", "Evaluate (Evaluar)"],
   INQUIRY: ["Cuestionamiento", "Exploración", "Investigación"],
   UDL:     ["Compromiso (Engagement)", "Representación", "Expresión y Acción"],
-  SEMANAL: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"],
 };
 
 const MODEL = process.env.GENERATION_MODEL ?? "claude-haiku-4-5-20251001";
@@ -207,34 +207,36 @@ function buildLessonPlanPrompt(input: GenerateLessonPlanInput): string {
   const exps = input.expectations.map((e) => `- ${e.code} (${e.standard}): ${e.description}`).join("\n");
   const lang = input.language === "en" ? "inglés" : "español";
 
-  if (input.format === "SEMANAL") {
-    return `Crea una planificación SEMANAL para "${input.lessonTitle}"
+  if (input.isWeekly) {
+    return `Crea una planificación SEMANAL en formato ${input.format} para "${input.lessonTitle}"
 de la unidad "${input.unitTitle}" de ${input.subject}, grado ${input.grade}.
 Idioma del contenido: ${lang}.
 
 Expectativas del DEPR a cubrir durante la semana:
 ${exps}
 
+El formato pedagógico es ${input.format} (${sections.join(", ")}). Aplica este enfoque metodológico
+a lo largo de la semana: los primeros días introducen y desarrollan, los últimos practican y cierran.
+
 Genera un plan para 5 días de clase (Lunes a Viernes). Cada día debe tener:
-- Actividades concretas y variadas (no repetir el mismo tipo de actividad cada día)
+- Actividades concretas inspiradas en el enfoque ${input.format}
 - Materiales específicos del día
-- Duración estimada en minutos (típicamente 45-60 min por día)
-- El día debe avanzar progresivamente: Lunes = introducción/motivación, Martes-Miércoles = desarrollo/práctica,
-  Jueves = profundización/aplicación, Viernes = cierre/evaluación/síntesis
+- Duración estimada en minutos (45-60 min por día)
+- Progresión: Lunes = motivación/introducción, Martes-Miércoles = instrucción/práctica,
+  Jueves = profundización, Viernes = cierre/evaluación
 
 Genera también 2-3 recursos de YouTube útiles para la semana.
-Para cada recurso devuelve solo la consulta de búsqueda ("query") y una etiqueta descriptiva ("label").
-NO incluyas el campo "url".
+Para cada recurso devuelve "query" y "label". NO incluyas "url".
 
 Devuelve JSON con esta forma EXACTA:
 {
-  "format": "SEMANAL",
+  "format": "${input.format}",
   "title": "string",
-  "overview": "string (2-3 oraciones describiendo el arco de la semana para el maestro)",
-  "objectives": ["string (objetivos generales de la semana, 3-5)"],
-  "materials": ["string (materiales generales de la semana)"],
+  "overview": "string (2-3 oraciones describiendo el arco de la semana)",
+  "objectives": ["string (3-5 objetivos de la semana)"],
+  "materials": ["string"],
   "sections": [
-    { "name": "Lunes", "durationMinutes": number, "content": "string (actividades detalladas)", "materials": ["string"] },
+    { "name": "Lunes", "durationMinutes": number, "content": "string", "materials": ["string"] },
     { "name": "Martes", "durationMinutes": number, "content": "string", "materials": ["string"] },
     { "name": "Miércoles", "durationMinutes": number, "content": "string", "materials": ["string"] },
     { "name": "Jueves", "durationMinutes": number, "content": "string", "materials": ["string"] },

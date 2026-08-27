@@ -131,6 +131,7 @@ model Lesson {
   durationMinutes Int?
   content         Json?
   format          String?
+  isWeekly        Boolean             @default(false)
   weekNumber      Int?
   order           Int                 @default(0)
   createdAt       DateTime            @default(now())

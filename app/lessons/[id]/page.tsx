@@ -13,7 +13,6 @@ const FORMAT_LABELS: Record<LessonFormat, string> = {
   "5E": "5E",
   INQUIRY: "Indagación",
   UDL: "UDL",
-  SEMANAL: "Semanal",
 };
 
 const DAY_COLORS: Record<string, string> = {
@@ -40,6 +39,7 @@ export default async function LessonPage({ params }: { params: Promise<{ id: str
 
   const plan = lesson.content as unknown as LessonPlanContent | null;
   const format = (lesson.format as LessonFormat) || "ICAP";
+  const isWeekly = lesson.isWeekly ?? false;
   const hasExpectations = lesson.expectations.length > 0;
 
   const planText = plan
@@ -90,8 +90,8 @@ export default async function LessonPage({ params }: { params: Promise<{ id: str
               {FORMAT_LABELS[format]}
             </span>
           )}
-          {format === "SEMANAL"
-            ? <span>5 días · Lun–Vie</span>
+          {isWeekly
+            ? <span className="rounded bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">Semanal · Lun–Vie</span>
             : lesson.durationMinutes && <span>{lesson.durationMinutes} min</span>
           }
           {lesson.weekNumber && <span>Semana {lesson.weekNumber}</span>}
@@ -175,7 +175,7 @@ export default async function LessonPage({ params }: { params: Promise<{ id: str
             </div>
 
             {/* Secciones */}
-            {format === "SEMANAL" ? (
+            {isWeekly ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {plan.sections.map((sec, i) => {
                   const dotColor = DAY_COLORS[sec.name] ?? "bg-zinc-400";

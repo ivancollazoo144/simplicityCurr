@@ -15,7 +15,6 @@ const FORMAT_LABELS: Record<LessonFormat, string> = {
   "5E": "5E",
   INQUIRY: "Indagación",
   UDL: "UDL",
-  SEMANAL: "Semanal",
 };
 
 type Tab = "planes" | "expectativas" | "cuadernos";

@@ -1,0 +1,1 @@
+ALTER TABLE "Lesson" ADD COLUMN "isWeekly" BOOLEAN NOT NULL DEFAULT false;

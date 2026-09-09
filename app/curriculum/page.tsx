@@ -18,8 +18,13 @@ export default async function CurriculumPage({
   const session = await getSession();
   const teacherId = session.teacherId!;
 
+  const DEPR_SUBJECT_CODES = ["MAT", "ESP", "ING", "CIE", "EST"];
+
   const [allSubjects, allGrades] = await Promise.all([
-    prisma.subject.findMany({ orderBy: { name: "asc" } }),
+    prisma.subject.findMany({
+      where: { code: { in: DEPR_SUBJECT_CODES } },
+      orderBy: { name: "asc" },
+    }),
     prisma.grade.findMany({ orderBy: { order: "asc" } }),
   ]);
 
@@ -47,7 +52,7 @@ export default async function CurriculumPage({
 
   const groups = new Map<string, typeof units>();
   for (const u of units) {
-    const key = `${u.subject.name} · Grado ${u.grade.label}`;
+    const key = `Grado ${u.grade.label}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(u);
   }
@@ -143,7 +148,10 @@ export default async function CurriculumPage({
                     <span className="mr-2 font-mono text-xs text-zinc-400">{u.code}</span>
                     {u.title}
                   </Link>
-                  <p className="mt-0.5 text-xs text-zinc-500">
+                  <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                    <span className="rounded bg-zinc-100 px-1.5 py-0.5 font-medium text-zinc-600">
+                      {u.subject.name}
+                    </span>
                     {u._count.expectations} expectativa(s)
                     {u.timeframe ? ` · ${u.timeframe}` : ""}
                   </p>

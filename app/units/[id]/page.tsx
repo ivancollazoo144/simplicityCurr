@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { toggleUnitExpectation } from "@/app/curriculum/actions";
 import { generateWorkbookForUnit, deleteWorkbook } from "@/app/workbooks/actions";
-import { createLesson, deleteLesson, generateWeekWorkbookAction } from "@/app/lessons/actions";
+import { createLesson, createAndGenerateLessonAction, deleteLesson, generateWeekWorkbookAction } from "@/app/lessons/actions";
 import type { LessonFormat } from "@/lib/generate";
 import ExpectationsSearch from "../ExpectationsSearch";
 import { LessonFormFields } from "../LessonFormFields";
@@ -262,12 +262,23 @@ export default async function UnitPage({
                 />
               )}
 
-              <button
-                type="submit"
-                className="mt-4 rounded-lg bg-brand px-5 py-2 text-sm font-medium text-white hover:bg-brand/90"
-              >
-                Crear lección
-              </button>
+              <div className="mt-4 flex flex-wrap gap-3">
+                {hasApiKey && (
+                  <button
+                    type="submit"
+                    formAction={createAndGenerateLessonAction}
+                    className="rounded-lg bg-brand-teal px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-teal/90"
+                  >
+                    ✦ Crear y generar plan
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="rounded-lg border border-zinc-300 px-5 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50"
+                >
+                  Solo crear (sin generar)
+                </button>
+              </div>
             </form>
           </div>
         </section>

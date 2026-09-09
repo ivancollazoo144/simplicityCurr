@@ -5,7 +5,7 @@ import { generateReportCardAction } from "../actions";
 export default async function BoletinPage() {
   const [grades, subjects] = await Promise.all([
     prisma.grade.findMany({ orderBy: { order: "asc" } }),
-    prisma.subject.findMany({ orderBy: { name: "asc" } }),
+    prisma.subject.findMany({ where: { code: { in: ["MAT", "ESP", "ING", "CIE", "EST"] } }, orderBy: { name: "asc" } }),
   ]);
 
   return (

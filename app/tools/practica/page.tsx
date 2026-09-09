@@ -9,7 +9,7 @@ export default async function PracticaPage() {
 
   const [grades, subjects, rawLessons] = await Promise.all([
     prisma.grade.findMany({ orderBy: { order: "asc" } }),
-    prisma.subject.findMany({ orderBy: { name: "asc" } }),
+    prisma.subject.findMany({ where: { code: { in: ["MAT", "ESP", "ING", "CIE", "EST"] } }, orderBy: { name: "asc" } }),
     prisma.lesson.findMany({
       where: { unit: { teacherId } },
       orderBy: [{ order: "asc" }],

@@ -16,7 +16,7 @@ const STEPS = [
 export default async function YouTubePage() {
   const [grades, subjects] = await Promise.all([
     prisma.grade.findMany({ orderBy: { order: "asc" } }),
-    prisma.subject.findMany({ orderBy: { name: "asc" } }),
+    prisma.subject.findMany({ where: { code: { in: ["MAT", "ESP", "ING", "CIE", "EST"] } }, orderBy: { name: "asc" } }),
   ]);
 
   return (

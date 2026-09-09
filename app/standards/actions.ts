@@ -17,6 +17,8 @@ export async function createLessonFromExpectationsAction(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const rawFormat = String(formData.get("format") ?? "").trim() as LessonFormat;
   const format: LessonFormat = VALID_FORMATS.includes(rawFormat) ? rawFormat : "ICAP";
+  const isWeekly = formData.get("isWeekly") === "1";
+  const durationRaw = formData.get("durationMinutes");
   const expectationIds = formData.getAll("expectationId") as string[];
 
   if (!unitId || !title) throw new Error("Título y unidad son requeridos.");
@@ -31,7 +33,14 @@ export async function createLessonFromExpectationsAction(formData: FormData) {
   const order = await prisma.lesson.count({ where: { unitId } });
 
   const lesson = await prisma.lesson.create({
-    data: { unitId, title, format, order },
+    data: {
+      unitId,
+      title,
+      format,
+      isWeekly,
+      durationMinutes: isWeekly ? null : (durationRaw ? Number(durationRaw) : null),
+      order,
+    },
   });
 
   if (expectationIds.length > 0) {
@@ -49,7 +58,7 @@ export async function createLessonFromExpectationsAction(formData: FormData) {
 
   const plan = await generateLessonPlan({
     format,
-    isWeekly: false,
+    isWeekly,
     subject: unit.subject.name,
     grade: unit.grade.label,
     lessonTitle: lesson.title,

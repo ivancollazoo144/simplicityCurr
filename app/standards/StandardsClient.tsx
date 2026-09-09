@@ -60,6 +60,7 @@ export default function StandardsClient({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
+  const [isWeekly, setIsWeekly] = useState(false);
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -389,6 +390,30 @@ export default function StandardsClient({
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Weekly / duration */}
+                <div className="flex items-center gap-3">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-300 px-3 py-2.5 text-sm text-zinc-700 flex-1">
+                    <input
+                      type="checkbox"
+                      name="isWeekly"
+                      value="1"
+                      checked={isWeekly}
+                      onChange={(e) => setIsWeekly(e.target.checked)}
+                      className="h-4 w-4 accent-teal-600"
+                    />
+                    Semanal (Lun–Vie)
+                  </label>
+                  {!isWeekly && (
+                    <input
+                      name="durationMinutes"
+                      type="number"
+                      min="1"
+                      placeholder="Duración (min)"
+                      className="flex-1 rounded-lg border border-zinc-300 px-3 py-2.5 text-sm outline-none focus:border-brand"
+                    />
+                  )}
                 </div>
 
                 {error && (

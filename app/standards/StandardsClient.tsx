@@ -406,9 +406,9 @@ export default function StandardsClient({
                   <button
                     type="submit"
                     disabled={isPending}
-                    className="flex-1 rounded-lg bg-brand py-2.5 text-sm font-semibold text-white hover:bg-brand/90 disabled:opacity-60"
+                    className="flex-1 rounded-lg bg-brand-teal py-2.5 text-sm font-semibold text-white hover:bg-brand-teal/90 disabled:opacity-60"
                   >
-                    {isPending ? "Creando…" : "Crear lección →"}
+                    {isPending ? "Generando plan…" : "✦ Crear y generar plan"}
                   </button>
                 </div>
               </form>

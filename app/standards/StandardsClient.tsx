@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle, ClipboardList, X, Search } from "lucide-react";
+import { CheckCircle, ClipboardList, X, Search, Info } from "lucide-react";
+
+const FORMAT_INFO: Record<string, string> = {
+  ICAP: "Introducción → Construcción → Aplicación → Presentación. Guía al estudiante desde el conocimiento previo hasta demostrar lo aprendido.",
+  WARMUP: "Lección corta de calentamiento o repaso rápido al inicio de la clase. Ideal para activar conocimientos en 10–15 minutos.",
+  "5E": "Enganchar → Explorar → Explicar → Elaborar → Evaluar. Modelo constructivista de 5 etapas, especialmente efectivo en ciencias.",
+  INQUIRY: "Los estudiantes formulan preguntas, investigan y construyen su propio conocimiento a través de la exploración guiada.",
+  UDL: "Diseño Universal para el Aprendizaje. Múltiples formas de representación y expresión para atender la diversidad del salón.",
+};
 import { SubjectGradeFilter } from "@/app/components/SubjectGradeFilter";
 import { createLessonFromExpectationsAction } from "./actions";
 
@@ -61,6 +69,7 @@ export default function StandardsClient({
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [isWeekly, setIsWeekly] = useState(false);
+  const [format, setFormat] = useState("ICAP");
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -381,7 +390,8 @@ export default function StandardsClient({
                   <select
                     name="format"
                     required
-                    defaultValue="ICAP"
+                    value={format}
+                    onChange={(e) => setFormat(e.target.value)}
                     className="w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-sm outline-none focus:border-brand"
                   >
                     {FORMAT_OPTIONS.map((f) => (
@@ -390,6 +400,12 @@ export default function StandardsClient({
                       </option>
                     ))}
                   </select>
+                  {FORMAT_INFO[format] && (
+                    <p className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                      <Info size={13} className="mt-0.5 shrink-0" />
+                      {FORMAT_INFO[format]}
+                    </p>
+                  )}
                 </div>
 
                 {/* Weekly / duration */}

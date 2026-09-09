@@ -43,7 +43,7 @@ export default async function ClassesPage() {
                     {cls.name}
                   </p>
                   <p className="mt-0.5 text-sm text-zinc-500">
-                    {cls.subject.name} · Grado {cls.grade.label} · {cls._count.units} unidad(es)
+                    Grado {cls.grade.label} · {cls._count.units} unidad(es)
                   </p>
                   {cls.description && (
                     <p className="mt-0.5 text-xs text-zinc-400">{cls.description}</p>

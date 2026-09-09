@@ -76,7 +76,7 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ id
           <div>
             <h1 className="text-2xl font-semibold text-zinc-900">{cls.name}</h1>
             <p className="mt-1 text-sm text-zinc-500">
-              {cls.subject.name} · Grado {cls.grade.label}
+              Grado {cls.grade.label}
               {cls.description && ` · ${cls.description}`}
             </p>
           </div>

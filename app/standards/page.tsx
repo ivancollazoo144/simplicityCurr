@@ -22,11 +22,7 @@ export default async function StandardsPage({
     }),
     prisma.grade.findMany({ orderBy: { order: "asc" } }),
     prisma.unit.findMany({
-      where: {
-        teacherId,
-        ...(subjectCode ? { subject: { code: subjectCode } } : {}),
-        ...(gradeLabel  ? { grade:   { label: gradeLabel  } } : {}),
-      },
+      where: { teacherId },
       orderBy: [{ subjectId: "asc" }, { gradeId: "asc" }, { order: "asc" }],
       include: {
         subject: { select: { name: true } },

@@ -96,7 +96,6 @@ export default function StandardsClient({
   };
 
   const handleCreate = (formData: FormData) => {
-    selected.forEach((id) => formData.append("expectationId", id));
     setError("");
     startTransition(async () => {
       try {
@@ -432,6 +431,11 @@ export default function StandardsClient({
                     />
                   )}
                 </div>
+
+                {/* Hidden inputs for selected expectation IDs */}
+                {Array.from(selected).map((id) => (
+                  <input key={id} type="hidden" name="expectationId" value={id} />
+                ))}
 
                 {error && (
                   <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>

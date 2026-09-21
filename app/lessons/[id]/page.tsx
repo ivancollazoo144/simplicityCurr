@@ -103,6 +103,25 @@ export default async function LessonPage({ params }: { params: Promise<{ id: str
         </div>
       </div>
 
+      {/* Expectativas cubiertas */}
+      {hasExpectations && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-brand-teal">
+            Expectativas del DEPR cubiertas
+          </h2>
+          <ul className="space-y-1.5">
+            {lesson.expectations.map(({ expectation }) => (
+              <li key={expectation.id} className="flex items-start gap-2.5 rounded-lg border border-teal-100 bg-teal-50 px-3 py-2 text-sm">
+                <span className="mt-0.5 shrink-0 rounded bg-teal-600 px-1.5 py-0.5 font-mono text-xs font-semibold text-white">
+                  {expectation.code}
+                </span>
+                <span className="text-zinc-700">{expectation.description}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {/* Plan de trabajo */}
       <section>
         <div className="mb-4 flex items-center justify-between">

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { CheckCircle, ClipboardList, X, Search, Info } from "lucide-react";
+import { ThinkingOverlay } from "@/app/components/GenerateButton";
 
 const FORMAT_INFO: Record<string, string> = {
   ICAP: "Introducción → Construcción → Aplicación → Presentación. Guía al estudiante desde el conocimiento previo hasta demostrar lo aprendido.",
@@ -451,6 +452,7 @@ export default function StandardsClient({
                   >
                     {isPending ? "Generando plan…" : "✦ Crear y generar plan"}
                   </button>
+                  {isPending && <ThinkingOverlay />}
                 </div>
               </form>
             )}

@@ -8,6 +8,7 @@ import { createLesson, createAndGenerateLessonAction, deleteLesson, generateWeek
 import type { LessonFormat } from "@/lib/generate";
 import ExpectationsSearch from "../ExpectationsSearch";
 import { LessonFormFields } from "../LessonFormFields";
+import CreateGeneratePlanButton from "@/app/components/CreateGeneratePlanButton";
 
 const FORMAT_LABELS: Record<LessonFormat, string> = {
   ICAP: "ICAP",
@@ -264,13 +265,7 @@ export default async function UnitPage({
 
               <div className="mt-4 flex flex-wrap gap-3">
                 {hasApiKey && (
-                  <button
-                    type="submit"
-                    formAction={createAndGenerateLessonAction}
-                    className="rounded-lg bg-brand-teal px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-teal/90"
-                  >
-                    ✦ Crear y generar plan
-                  </button>
+                  <CreateGeneratePlanButton formAction={createAndGenerateLessonAction} />
                 )}
                 <button
                   type="submit"

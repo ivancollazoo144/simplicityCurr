@@ -14,7 +14,7 @@ const MESSAGES = [
   "Casi listo…",
 ];
 
-function ThinkingOverlay() {
+export function ThinkingOverlay() {
   const [msgIndex, setMsgIndex] = useState(0);
 
   useEffect(() => {

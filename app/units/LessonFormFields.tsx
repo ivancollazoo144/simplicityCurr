@@ -27,7 +27,7 @@ const FORMAT_INFO: Record<string, { label: string; desc: string }> = {
 };
 
 export function LessonFormFields() {
-  const [isWeekly, setIsWeekly] = useState(false);
+  const [isWeekly, setIsWeekly] = useState(true);
   const [format, setFormat] = useState("ICAP");
 
   return (

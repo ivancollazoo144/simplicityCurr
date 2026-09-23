@@ -36,7 +36,7 @@ export default async function ReportsPage() {
   const { teacherId } = await requireSession();
 
   // ── Real data ───────────────────────────────────────────────────────────────
-  const [classes, allLessons, workbooks, recentWorkbooks, recentTools] =
+  const [classes, allLessons, workbooks, recentWorkbooks, recentTools, toolUsage] =
     await Promise.all([
       prisma.class.findMany({
         where: { teacherId },
@@ -71,6 +71,11 @@ export default async function ReportsPage() {
         orderBy: { createdAt: "desc" },
         take: 4,
         select: { id: true, type: true, title: true, createdAt: true },
+      }),
+      prisma.toolOutput.groupBy({
+        by: ["type"],
+        where: { teacherId },
+        _count: { _all: true },
       }),
     ]);
 
@@ -590,6 +595,45 @@ export default async function ReportsPage() {
               </p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── Herramientas IA ──────────────────────────────────────────────────── */}
+      <div className="mt-6 rounded-xl border border-zinc-200 bg-white">
+        <div className="flex items-center justify-between border-b border-zinc-100 px-6 py-4">
+          <div>
+            <h2 className="font-semibold text-zinc-900">Herramientas IA</h2>
+            <p className="mt-0.5 text-xs text-zinc-400">Genera materiales adicionales para tus clases</p>
+          </div>
+          <Link href="/tools" className="text-xs text-brand-teal hover:underline">Ver todas →</Link>
+        </div>
+        <div className="grid grid-cols-2 gap-3 p-6 sm:grid-cols-3 lg:grid-cols-5">
+          {[
+            { type: "quiz",       label: "Quiz",              desc: "Preguntas de selección múltiple con clave",   href: "/tools/quiz",        popular: true  },
+            { type: "practica",   label: "Hoja de Práctica",  desc: "Actividades de práctica alineadas al tema",  href: "/tools/practica",    popular: true  },
+            { type: "rubrica",    label: "Rúbrica",           desc: "Criterios de evaluación detallados",         href: "/tools/rubrica",     popular: false },
+            { type: "boletin",    label: "Boletín",           desc: "Comunicado de progreso para padres",         href: "/tools/boletin",     popular: false },
+            { type: "preguntas",  label: "Comprensión",       desc: "Preguntas de comprensión de lectura",        href: "/tools/preguntas",   popular: false },
+          ].map(({ type, label, desc, href, popular }) => {
+            const count = toolUsage.find((t) => t.type === type)?._count._all ?? 0;
+            return (
+              <Link
+                key={type}
+                href={href}
+                className="group flex flex-col rounded-xl border border-zinc-100 bg-zinc-50 p-4 hover:border-brand-teal/30 hover:bg-teal-50/40 transition-colors"
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                    count > 0 ? "bg-teal-100 text-teal-700" : "bg-zinc-200 text-zinc-500"
+                  }`}>
+                    {count > 0 ? `${count} usos` : popular ? "★ Popular" : "Pruébalo"}
+                  </span>
+                </div>
+                <p className="text-sm font-semibold text-zinc-900 group-hover:text-brand-teal">{label}</p>
+                <p className="mt-1 text-xs text-zinc-400 leading-relaxed">{desc}</p>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </main>

@@ -9,8 +9,11 @@ export default async function TeachersAdminPage() {
   await requireAdmin();
 
   const teachers = await prisma.teacher.findMany({
-    orderBy: { createdAt: "asc" },
-    include: { _count: { select: { units: true, classes: true } } },
+    orderBy: { name: "asc" },
+    include: {
+      _count: { select: { units: true, classes: true, toolOutputs: true } },
+      units: { include: { _count: { select: { lessons: true } } } },
+    },
   });
 
   return (
@@ -41,14 +44,22 @@ export default async function TeachersAdminPage() {
 
       {/* Lista */}
       <ul className="space-y-3">
-        {teachers.map((t) => (
-          <li key={t.id} className="rounded-xl border border-zinc-200 bg-white p-4">
+        {teachers.map((t) => {
+          const totalLessons = t.units.reduce((n, u) => n + u._count.lessons, 0);
+          const isInactive = totalLessons === 0 && t.role !== "admin";
+          return (
+          <li key={t.id} className={`rounded-xl border bg-white p-4 ${isInactive ? "border-amber-200" : "border-zinc-200"}`}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="font-semibold text-zinc-900">{t.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-zinc-900">{t.name}</p>
+                  {isInactive && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">Sin actividad</span>
+                  )}
+                </div>
                 <p className="text-sm text-zinc-500">{t.email}</p>
                 <p className="mt-1 text-xs text-zinc-400">
-                  {t._count.classes} clase(s) · {t._count.units} unidad(es) ·{" "}
+                  {t._count.classes} clase(s) · {t._count.units} unidad(es) · {totalLessons} lección(es) · {t._count.toolOutputs} herramienta(s) ·{" "}
                   <span className={t.role === "admin" ? "font-semibold text-brand" : "text-zinc-500"}>
                     {t.role === "admin" ? "Administrador" : "Maestro"}
                   </span>
@@ -90,7 +101,8 @@ export default async function TeachersAdminPage() {
               </form>
             </div>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </main>
   );

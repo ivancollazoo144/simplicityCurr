@@ -69,7 +69,7 @@ export default function StandardsClient({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
-  const [isWeekly, setIsWeekly] = useState(false);
+  const [isWeekly, setIsWeekly] = useState(true);
   const [format, setFormat] = useState("ICAP");
 
   const toggle = (id: string) => {

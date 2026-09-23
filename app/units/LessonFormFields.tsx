@@ -28,7 +28,7 @@ const FORMAT_INFO: Record<string, { label: string; desc: string }> = {
 
 export function LessonFormFields() {
   const [isWeekly, setIsWeekly] = useState(false);
-  const [format, setFormat] = useState("");
+  const [format, setFormat] = useState("ICAP");
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
@@ -46,7 +46,6 @@ export function LessonFormFields() {
           onChange={(e) => setFormat(e.target.value)}
           className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
         >
-          <option value="">— Formato —</option>
           {Object.entries(FORMAT_INFO).map(([val, { label }]) => (
             <option key={val} value={val}>{label}</option>
           ))}

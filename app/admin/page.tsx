@@ -5,8 +5,13 @@ import { backfillUnitExpectations } from "./teachers/actions";
 
 export const metadata = { title: "Administración · simplicityCurr" };
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ synced?: string }>;
+}) {
   await requireAdmin();
+  const { synced } = await searchParams;
 
   const teachers = await prisma.teacher.findMany({
     orderBy: { createdAt: "asc" },
@@ -42,6 +47,12 @@ export default async function AdminPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-12">
+      {synced !== undefined && (
+        <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          ✓ Sincronización completada — {synced} expectativa(s) nuevas añadidas al mapa curricular.
+        </div>
+      )}
+
       <div className="mb-6 flex items-center justify-between">
         <div>
           <Link href="/" className="text-sm text-brand-teal hover:underline">← Inicio</Link>

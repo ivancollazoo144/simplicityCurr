@@ -47,6 +47,11 @@ export async function createLessonFromExpectationsAction(formData: FormData) {
     await prisma.lessonExpectation.createMany({
       data: expectationIds.map((expectationId) => ({ lessonId: lesson.id, expectationId })),
     });
+    // Also reflect expectations at the unit level so the curriculum map shows coverage
+    await prisma.unitExpectation.createMany({
+      data: expectationIds.map((expectationId) => ({ unitId: lesson.unitId, expectationId })),
+      skipDuplicates: true,
+    });
   }
 
   const expectations = await prisma.lessonExpectation.findMany({

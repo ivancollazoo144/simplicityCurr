@@ -42,8 +42,14 @@ export async function createLesson(formData: FormData) {
     },
   });
 
-  for (const expectationId of expectationIds) {
-    await prisma.lessonExpectation.create({ data: { lessonId: lesson.id, expectationId } });
+  if (expectationIds.length > 0) {
+    await prisma.lessonExpectation.createMany({
+      data: expectationIds.map((expectationId) => ({ lessonId: lesson.id, expectationId })),
+    });
+    await prisma.unitExpectation.createMany({
+      data: expectationIds.map((expectationId) => ({ unitId: lesson.unitId, expectationId })),
+      skipDuplicates: true,
+    });
   }
 
   revalidatePath(`/units/${unitId}`);
@@ -87,6 +93,10 @@ export async function createAndGenerateLessonAction(formData: FormData) {
   if (expectationIds.length > 0) {
     await prisma.lessonExpectation.createMany({
       data: expectationIds.map((expectationId) => ({ lessonId: lesson.id, expectationId })),
+    });
+    await prisma.unitExpectation.createMany({
+      data: expectationIds.map((expectationId) => ({ unitId: lesson.unitId, expectationId })),
+      skipDuplicates: true,
     });
   }
 

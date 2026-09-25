@@ -9,6 +9,7 @@ import type { LessonFormat } from "@/lib/generate";
 import ExpectationsSearch from "../ExpectationsSearch";
 import { LessonFormFields } from "../LessonFormFields";
 import CreateGeneratePlanButton from "@/app/components/CreateGeneratePlanButton";
+import { WeekPicker } from "../WeekPicker";
 
 const FORMAT_LABELS: Record<LessonFormat, string> = {
   ICAP: "ICAP",
@@ -210,6 +211,7 @@ export default async function UnitPage({
                             </div>
                           </div>
                           <div className="flex shrink-0 items-center gap-2">
+                            <WeekPicker lessonId={lesson.id} currentWeek={lesson.weekNumber ?? null} />
                             {lesson.content !== null && (
                               <Link
                                 href={`/lessons/${lesson.id}/print`}

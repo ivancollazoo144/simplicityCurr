@@ -132,6 +132,19 @@ export async function createAndGenerateLessonAction(formData: FormData) {
   redirect(`/lessons/${lesson.id}`);
 }
 
+export async function updateLessonWeek(formData: FormData) {
+  const { teacherId } = await requireSession();
+  const id = String(formData.get("id") ?? "");
+  const raw = formData.get("weekNumber");
+  const weekNumber = raw && String(raw).trim() !== "" ? Number(raw) : null;
+
+  const lesson = await prisma.lesson.findUnique({ where: { id }, include: { unit: { select: { teacherId: true, id: true } } } });
+  if (!lesson || lesson.unit.teacherId !== teacherId) throw new Error("No autorizado");
+
+  await prisma.lesson.update({ where: { id }, data: { weekNumber } });
+  revalidatePath(`/units/${lesson.unit.id}`);
+}
+
 export async function deleteLesson(formData: FormData) {
   const { teacherId } = await requireSession();
   const id = String(formData.get("id") ?? "");

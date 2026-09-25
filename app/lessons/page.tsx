@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import type { LessonFormat } from "@/lib/generate";
+import { GradeFilter } from "./GradeFilter";
 
 export const metadata = { title: "Planes de trabajo · simplicityCurr" };
 
@@ -13,9 +14,14 @@ const FORMAT_LABELS: Record<LessonFormat, string> = {
   UDL: "UDL",
 };
 
-export default async function LessonsPage() {
+export default async function LessonsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ grade?: string }>;
+}) {
   const session = await getSession();
   const teacherId = session.teacherId!;
+  const { grade: gradeId } = await searchParams;
 
   const units = await prisma.unit.findMany({
     where: { teacherId },
@@ -33,7 +39,22 @@ export default async function LessonsPage() {
     orderBy: [{ subjectId: "asc" }, { gradeId: "asc" }, { order: "asc" }],
   });
 
-  const unitsWithLessons = units.filter((u) => u.lessons.length > 0);
+  // Unique grades that have at least one lesson, sorted
+  const gradesWithLessons = Array.from(
+    new Map(
+      units
+        .filter((u) => u.lessons.length > 0)
+        .map((u) => [u.grade.id, u.grade])
+    ).values()
+  ).sort((a, b) => {
+    const n = (l: string) => (l === "K" ? -1 : Number(l));
+    return n(a.label) - n(b.label);
+  });
+
+  const filtered = units.filter(
+    (u) => u.lessons.length > 0 && (!gradeId || u.gradeId === gradeId)
+  );
+
   const totalLessons = units.reduce((n, u) => n + u.lessons.length, 0);
   const withPlan = units.reduce(
     (n, u) => n + u.lessons.filter((l) => l.content !== null).length,
@@ -56,9 +77,9 @@ export default async function LessonsPage() {
       </div>
 
       {/* Stats */}
-      <dl className="mb-8 grid grid-cols-3 gap-4">
+      <dl className="mb-6 grid grid-cols-3 gap-4">
         {[
-          { label: "Unidades con lecciones", value: unitsWithLessons.length },
+          { label: "Unidades con lecciones", value: units.filter((u) => u.lessons.length > 0).length },
           { label: "Total de lecciones", value: totalLessons },
           { label: "Planes generados", value: withPlan },
         ].map((s) => (
@@ -74,6 +95,14 @@ export default async function LessonsPage() {
         ))}
       </dl>
 
+      {/* Grade filter */}
+      {gradesWithLessons.length > 1 && (
+        <div className="mb-6 flex items-center gap-3">
+          <span className="text-sm text-zinc-500">Filtrar por grado:</span>
+          <GradeFilter grades={gradesWithLessons} current={gradeId ?? ""} />
+        </div>
+      )}
+
       {totalLessons === 0 ? (
         <div className="rounded-lg border border-zinc-200 bg-white p-8 text-center">
           <p className="text-zinc-500">Aún no hay lecciones creadas.</p>
@@ -85,84 +114,86 @@ export default async function LessonsPage() {
             , abre una unidad y crea la primera lección desde la sección &quot;Planes de trabajo&quot;.
           </p>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-lg border border-zinc-200 bg-white p-8 text-center">
+          <p className="text-zinc-500">No hay lecciones para este grado.</p>
+        </div>
       ) : (
         <div className="space-y-8">
-          {units
-            .filter((u) => u.lessons.length > 0)
-            .map((unit) => (
-              <section key={unit.id}>
-                <div className="mb-3 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-sm font-medium text-zinc-900">
-                      <span className="font-mono text-xs text-zinc-400 mr-2">{unit.code}</span>
-                      {unit.title}
-                    </h2>
-                    <p className="text-xs text-zinc-400">
-                      {unit.subject.name} · Grado {unit.grade.label}
-                    </p>
-                  </div>
-                  <Link
-                    href={`/units/${unit.id}`}
-                    className="text-xs text-brand-teal hover:underline"
-                  >
-                    + Nueva lección
-                  </Link>
+          {filtered.map((unit) => (
+            <section key={unit.id}>
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-medium text-zinc-900">
+                    <span className="font-mono text-xs text-zinc-400 mr-2">{unit.code}</span>
+                    {unit.title}
+                  </h2>
+                  <p className="text-xs text-zinc-400">
+                    {unit.subject.name} · Grado {unit.grade.label}
+                  </p>
                 </div>
-                <ul className="space-y-2">
-                  {unit.lessons.map((lesson) => {
-                    const hasPlan = lesson.content !== null;
-                    const hasWorkbook = lesson.workbooks.length > 0;
-                    return (
-                      <li
-                        key={lesson.id}
-                        className="flex items-center justify-between gap-4 rounded-lg border border-zinc-200 bg-white p-4"
-                      >
-                        <div className="min-w-0">
-                          <Link
-                            href={`/lessons/${lesson.id}`}
-                            className="font-medium text-zinc-900 hover:text-brand"
-                          >
-                            {lesson.title}
-                          </Link>
-                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
-                            {lesson.format && (
-                              <span className="rounded bg-brand/10 px-1.5 py-0.5 font-mono text-brand">
-                                {FORMAT_LABELS[lesson.format as LessonFormat] ?? lesson.format}
-                              </span>
-                            )}
-                            {lesson.weekNumber && <span>Semana {lesson.weekNumber}</span>}
-                            {lesson.durationMinutes && <span>{lesson.durationMinutes} min</span>}
-                            <span>{lesson.expectations.length} expectativa(s)</span>
-                          </div>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          {hasPlan ? (
-                            <span className="rounded bg-brand/10 px-2 py-0.5 text-xs font-medium text-brand">
-                              plan ✓
-                            </span>
-                          ) : (
-                            <span className="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">
-                              sin plan
+                <Link
+                  href={`/units/${unit.id}`}
+                  className="text-xs text-brand-teal hover:underline"
+                >
+                  + Nueva lección
+                </Link>
+              </div>
+              <ul className="space-y-2">
+                {unit.lessons.map((lesson) => {
+                  const hasPlan = lesson.content !== null;
+                  const hasWorkbook = lesson.workbooks.length > 0;
+                  return (
+                    <li
+                      key={lesson.id}
+                      className="flex items-center justify-between gap-4 rounded-lg border border-zinc-200 bg-white p-4"
+                    >
+                      <div className="min-w-0">
+                        <Link
+                          href={`/lessons/${lesson.id}`}
+                          className="font-medium text-zinc-900 hover:text-brand"
+                        >
+                          {lesson.title}
+                        </Link>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
+                          {lesson.format && (
+                            <span className="rounded bg-brand/10 px-1.5 py-0.5 font-mono text-brand">
+                              {FORMAT_LABELS[lesson.format as LessonFormat] ?? lesson.format}
                             </span>
                           )}
-                          {hasWorkbook && (
-                            <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                              cuaderno ✓
-                            </span>
-                          )}
-                          <Link
-                            href={`/lessons/${lesson.id}`}
-                            className="rounded border border-zinc-300 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-100"
-                          >
-                            {hasPlan ? "Ver plan" : "Crear plan"}
-                          </Link>
+                          {lesson.weekNumber && <span>Semana {lesson.weekNumber}</span>}
+                          {lesson.durationMinutes && <span>{lesson.durationMinutes} min</span>}
+                          <span>{lesson.expectations.length} expectativa(s)</span>
                         </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            ))}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {hasPlan ? (
+                          <span className="rounded bg-brand/10 px-2 py-0.5 text-xs font-medium text-brand">
+                            plan ✓
+                          </span>
+                        ) : (
+                          <span className="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">
+                            sin plan
+                          </span>
+                        )}
+                        {hasWorkbook && (
+                          <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                            cuaderno ✓
+                          </span>
+                        )}
+                        <Link
+                          href={`/lessons/${lesson.id}`}
+                          className="rounded border border-zinc-300 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-100"
+                        >
+                          {hasPlan ? "Ver plan" : "Crear plan"}
+                        </Link>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
         </div>
       )}
     </main>

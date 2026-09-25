@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
+import { backfillUnitExpectations } from "./teachers/actions";
 
 export const metadata = { title: "Administración · simplicityCurr" };
 
@@ -47,7 +48,12 @@ export default async function AdminPage() {
           <h1 className="mt-2 text-2xl font-semibold text-zinc-900">Panel de administración</h1>
           <p className="mt-1 text-sm text-zinc-500">Supervisa el trabajo de todos los maestros.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <form action={backfillUnitExpectations}>
+            <button className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100">
+              Sincronizar expectativas
+            </button>
+          </form>
           <Link
             href="/admin/classes"
             className="rounded-lg bg-brand-teal/10 px-4 py-2 text-sm font-medium text-brand-teal hover:bg-brand-teal/20"

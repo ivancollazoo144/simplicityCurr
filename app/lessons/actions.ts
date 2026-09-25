@@ -150,7 +150,7 @@ export async function toggleLessonExpectation(formData: FormData) {
   const unitId = String(formData.get("unitId") ?? "");
   if (!lessonId || !expectationId) return;
 
-  const lesson = await prisma.lesson.findUnique({ where: { id: lessonId }, include: { unit: true } });
+  const lesson = await prisma.lesson.findUnique({ where: { id: lessonId }, include: { unit: { select: { teacherId: true } } } });
   if (!lesson || lesson.unit.teacherId !== teacherId) throw new Error("No autorizado");
 
   const existing = await prisma.lessonExpectation.findUnique({
@@ -160,6 +160,12 @@ export async function toggleLessonExpectation(formData: FormData) {
     await prisma.lessonExpectation.delete({ where: { lessonId_expectationId: { lessonId, expectationId } } });
   } else {
     await prisma.lessonExpectation.create({ data: { lessonId, expectationId } });
+    // Mirror at unit level so curriculum map counts stay accurate
+    await prisma.unitExpectation.upsert({
+      where: { unitId_expectationId: { unitId: lesson.unitId, expectationId } },
+      create: { unitId: lesson.unitId, expectationId },
+      update: {},
+    });
   }
 
   revalidatePath(`/lessons/${lessonId}`);

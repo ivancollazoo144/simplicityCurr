@@ -72,3 +72,21 @@ export async function resetTeacherPassword(formData: FormData) {
   await prisma.teacher.update({ where: { id }, data: { password: hashed } });
   revalidatePath("/admin/teachers");
 }
+
+export async function backfillUnitExpectations() {
+  await requireAdmin();
+  // Copy every LessonExpectation → UnitExpectation so the curriculum map
+  // reflects all lesson-level coverage, not just what was assigned via the
+  // "Expectativas DEPR" tab.
+  const lessonExps = await prisma.lessonExpectation.findMany({
+    select: { lessonId: true, expectationId: true, lesson: { select: { unitId: true } } },
+  });
+  const pairs = lessonExps.map((le) => ({
+    unitId: le.lesson.unitId,
+    expectationId: le.expectationId,
+  }));
+  if (pairs.length === 0) return;
+  await prisma.unitExpectation.createMany({ data: pairs, skipDuplicates: true });
+  revalidatePath("/curriculum");
+  revalidatePath("/admin");
+}

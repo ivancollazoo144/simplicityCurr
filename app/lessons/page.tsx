@@ -99,7 +99,7 @@ export default async function LessonsPage({
       {gradesWithLessons.length > 1 && (
         <div className="mb-6 flex items-center gap-3">
           <span className="text-sm text-zinc-500">Filtrar por grado:</span>
-          <GradeFilter grades={gradesWithLessons} current={gradeId ?? ""} />
+          <GradeFilter grades={gradesWithLessons} current={gradeId ?? ""} basePath="/lessons" />
         </div>
       )}
 

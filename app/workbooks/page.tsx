@@ -1,12 +1,18 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { GradeFilter } from "@/app/lessons/GradeFilter";
 
 export const metadata = { title: "Cuadernos · simplicityCurr" };
 
-export default async function WorkbooksPage() {
+export default async function WorkbooksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ grade?: string }>;
+}) {
   const session = await getSession();
   const teacherId = session.teacherId!;
+  const { grade: gradeId } = await searchParams;
 
   const workbooks = await prisma.workbook.findMany({
     where: { unit: { teacherId } },
@@ -16,8 +22,24 @@ export default async function WorkbooksPage() {
     },
   });
 
+  // Unique grades that appear in workbooks, sorted
+  const gradesWithWorkbooks = Array.from(
+    new Map(
+      workbooks
+        .filter((wb) => wb.unit)
+        .map((wb) => [wb.unit!.grade.id, wb.unit!.grade])
+    ).values()
+  ).sort((a, b) => {
+    const n = (l: string) => (l === "K" ? -1 : Number(l));
+    return n(a.label) - n(b.label);
+  });
+
+  const filtered = gradeId
+    ? workbooks.filter((wb) => wb.unit?.grade.id === gradeId)
+    : workbooks;
+
   const groups = new Map<string, typeof workbooks>();
-  for (const wb of workbooks) {
+  for (const wb of filtered) {
     const key = wb.unit
       ? `${wb.unit.subject.name} · Grado ${wb.unit.grade.label}`
       : "Sin unidad";
@@ -47,6 +69,14 @@ export default async function WorkbooksPage() {
         </p>
       </div>
 
+      {/* Grade filter */}
+      {gradesWithWorkbooks.length > 1 && (
+        <div className="mb-6 flex items-center gap-3">
+          <span className="text-sm text-zinc-500">Filtrar por grado:</span>
+          <GradeFilter grades={gradesWithWorkbooks} current={gradeId ?? ""} basePath="/workbooks" />
+        </div>
+      )}
+
       {workbooks.length === 0 ? (
         <p className="text-zinc-500">
           Aún no hay cuadernos. Genera uno desde una unidad en el{" "}
@@ -55,6 +85,8 @@ export default async function WorkbooksPage() {
           </Link>
           .
         </p>
+      ) : filtered.length === 0 ? (
+        <p className="text-zinc-500">No hay cuadernos para este grado.</p>
       ) : (
         [...groups.entries()].map(([groupTitle, wbs]) => (
           <section key={groupTitle} className="mb-8">

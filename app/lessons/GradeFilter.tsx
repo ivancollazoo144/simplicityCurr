@@ -7,14 +7,22 @@ interface Grade {
   label: string;
 }
 
-export function GradeFilter({ grades, current }: { grades: Grade[]; current: string }) {
+export function GradeFilter({
+  grades,
+  current,
+  basePath,
+}: {
+  grades: Grade[];
+  current: string;
+  basePath: string;
+}) {
   const router = useRouter();
 
   return (
     <select
       value={current}
       onChange={(e) =>
-        router.push(e.target.value ? `/lessons?grade=${e.target.value}` : "/lessons")
+        router.push(e.target.value ? `${basePath}?grade=${e.target.value}` : basePath)
       }
       className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700"
     >
